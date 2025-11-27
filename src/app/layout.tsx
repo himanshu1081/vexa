@@ -19,7 +19,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={`text-white bg-[#05000f] fixed z-50 min-h-screen ${instrumentFont.variable}`}>
+      <body className={`text-white bg-[#05000f] fixed z-50 min-h-screen ${instrumentFont.className}`}>
         <div className="absolute z-50">
           <Navbar />
         </div>

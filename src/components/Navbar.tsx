@@ -1,12 +1,24 @@
 "use client"
 import { motion } from "motion/react"
 import Link from "next/link";
+import { Inter } from "next/font/google";
+import { Instrument_Sans } from "next/font/google";
 
+const inter = Inter({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "900"],
+});
+
+const instrumentFont = Instrument_Sans({
+    subsets: ["latin"],
+    weight: ["400", "500", "600", "700"],
+    variable: "--font-instrument",
+});
 
 const Navbar: React.FC = () => {
     return (
         <>
-            <div className="flex w-screen justify-center">
+            <div className={` ${instrumentFont.className} flex w-screen justify-center`}>
 
                 <motion.div
                     initial={{ opacity: 0, y: -30 }}
@@ -16,11 +28,11 @@ const Navbar: React.FC = () => {
                     id="navbar">
                     <div className="flex items-center justify-between sm:justify-around whitespace-nowrap font-chillax p-2 px-4 text-base scroll-smooth text-white">
                         <div>
-                            <Link href="/" className="whitespace-nowrap cursor-pointer font-inter text-base md:text-4xl">
+                            <Link href="/" className={`${inter.className} whitespace-nowrap cursor-pointer font-bold text-base md:text-4xl`}>
                                 Vexa
                             </Link>
                         </div>
-                        <div className="sm:flex hidden justify-between items-center gap-5 md:gap-10 font-instrument text-xs md:text-base text-gray-300 ">
+                        <div className={`${instrumentFont.className} sm:flex hidden justify-between items-center gap-5 md:gap-10 text-xs md:text-base text-gray-300 `}>
                             <div>
                                 <Link href="/pricing" className="hover:text-white">Pricing</Link>
                             </div>
