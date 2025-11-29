@@ -24,7 +24,7 @@ export default function Page() {
           initial={{ y: 30, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: .8 }}
-          className={`p-6 ${instrumentFont.variable} flex justify-between flex-col items-start border-2 border-white/20 p-4 rounded-3xl w-1/4 h-3/4 gap-10 bg-black/20 backdrop-blur-md hover:bg-purple-700/10`}>
+          className={`p-6 ${instrumentFont.variable} flex justify-between flex-col items-start border-2 border-white/20 rounded-3xl h-3/4 gap-10 bg-black/20 backdrop-blur-md hover:bg-purple-700/10`}>
           <div className="flex flex-col">
             <span className={`text-4xl ${inter.className}`}>
               Login

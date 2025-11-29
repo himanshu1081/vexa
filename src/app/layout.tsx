@@ -23,7 +23,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`text-white bg-[#05000f] z-50 ${instrumentFont.className}`}>
-        <div className="fixed z-50 backdrop-blur-2xl">
+        <div className="fixed z-50">
           <Navbar />
         </div>
         <ClientLayout>
@@ -31,7 +31,6 @@ export default function RootLayout({
             {children}
           </div>
         </ClientLayout>
-
       </body>
     </html>
   );

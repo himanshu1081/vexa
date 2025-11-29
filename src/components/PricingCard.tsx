@@ -25,19 +25,23 @@ interface PricingPlan {
 }
 
 const PricingCard: React.FC<PricingPlan> = ({ index, id, name, price, priceUnit, tagline, features }) => {
+
+    if (priceUnit == 'year') {
+        price = price * 12 * 0.9
+    }
     return (
         <>
             <motion.div
                 initial={{ y: 30, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ duration: .8, delay: 0.2 * index }}
-                className={`p-4 ${instrumentFont.variable} flex justify-between flex-col items-start border-2 border-white/20 rounded-3xl w-[300px] lg:w-[350px]  h-[500px] gap-5 bg-black/20 backdrop-blur-md hover:bg-purple-700/10`}>
+                className={`p-4 ${instrumentFont.variable} flex justify-between flex-col items-start border-2 border-white/20 rounded-3xl w-[300px]  h-[450px] xl:h-[500px] xl:w-[350px] gap-2 bg-black/20 backdrop-blur-md hover:bg-purple-700/10`}>
                 <div className="flex flex-col">
-                    <span className={`text-4xl ${inter.className}`}>
+                    <span className={`text-2xl ${inter.className}`}>
                         {name}
                     </span>
                     <span className={`text-4xl font-semibold`}>
-                        ${price}/{priceUnit}
+                        ${price.toFixed(2)}/{priceUnit}
                     </span>
                 </div>
                 <div className="text-sm  ">
