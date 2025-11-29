@@ -3,10 +3,11 @@ import { motion } from "motion/react"
 import Link from "next/link";
 import { Inter } from "next/font/google";
 import { Instrument_Sans } from "next/font/google";
+import { usePathname } from "next/navigation";
 
 const inter = Inter({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "900"],
+    subsets: ["latin"],
+    weight: ["400", "500", "600", "700", "900"],
 });
 
 const instrumentFont = Instrument_Sans({
@@ -15,7 +16,13 @@ const instrumentFont = Instrument_Sans({
     variable: "--font-instrument",
 });
 
+
 const Navbar: React.FC = () => {
+    const pathname = usePathname()
+
+    const linkColor = (href: string) => {
+        return pathname.startsWith(href) ? "text-white" : "text-gray-400";
+    }
     return (
         <>
             <div className={` ${instrumentFont.className} flex w-screen justify-center`}>
@@ -34,13 +41,13 @@ const Navbar: React.FC = () => {
                         </div>
                         <div className={`${instrumentFont.className} sm:flex hidden justify-between items-center gap-5 md:gap-10 text-xs md:text-base text-gray-300 `}>
                             <div>
-                                <Link href="/pricing" className="hover:text-white">Pricing</Link>
+                                <Link href="/pricing" className={`hover:text-white ${linkColor("/pricing")}`}>Pricing</Link>
                             </div>
                             <div>
-                                <Link href="/about" className="hover:text-white">About us</Link>
+                                <Link href="/about" className={`hover:text-white ${linkColor("/about")}`}>About us</Link>
                             </div>
                             <div>
-                                <Link href="/contact" className="hover:text-white">Contact</Link>
+                                <Link href="/contact" className={`hover:text-white ${linkColor("/contact")}`}>Contact</Link>
                             </div>
                         </div>
                         <div className="flex justify-end">

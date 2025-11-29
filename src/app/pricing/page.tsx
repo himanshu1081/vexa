@@ -2,12 +2,15 @@
 import PricingCard from "../../components/PricingCard";
 import { Inter } from "next/font/google";
 import { motion } from "motion/react"
+import Toggle from "../../components/Toggle";
+import { useState } from "react";
 
 
 const inter = Inter({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700", "900"],
 });
+
 
 export default function Page() {
 
@@ -65,21 +68,25 @@ export default function Page() {
     }
   ];
 
-
+  const [priceUnit, setPriceUnit] = useState<'month' | 'year'>('month');
+  const handleToggle = () => {
+    setPriceUnit('year')
+  }
   return (
     <>
-      <div className="w-screen h-screen">
-        <div className={`font-bold text-[20vw] flex justify-center items-center w-screen h-screen absolute -z-20`}
+      <div className="w-screen lg:h-screen lg:overflow-y-hidden overflow-x-hidden">
+        <div className={`font-bold text-[20vw] flex justify-center items-center w-screen absolute -z-20`}
           style={{ fontFamily: inter.style.fontFamily }}>
           <motion.span
-            initial={{ y: 60, opacity: 0 }}
+            initial={{ y: -60, opacity: 0 }}
             animate={{ y: 0, opacity: 0.2 }}
             transition={{ duration: 0.8 }}
-            className="opacity-15 text-[#8e19b9]">
+            className={`${inter.className} opacity-15 text-[#8e19b9] w-screen h-screen flex items-center justify-center fixed top-10`}>
             Pricing
           </motion.span>
         </div>
-        <div className="flex gap-10 mt-10 w-screen h-screen justify-center items-center">
+        <div
+          className="flex flex-col lg:flex-row gap-5 md:gap-10 w-full h-full lg:justify-center items-center p-5 mt-15 md:mt-20 mb-5 md:mb-10 lg:mt-10">
           {pricing.map((p, index) => (
             <PricingCard
               index={index}
@@ -87,7 +94,7 @@ export default function Page() {
               id={p.id}
               name={p.name}
               price={p.price}
-              priceUnit={p.priceUnit}
+              priceUnit={priceUnit}
               tagline={p.tagline}
               features={p.features} />
           ))}
