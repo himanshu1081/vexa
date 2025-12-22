@@ -3,7 +3,7 @@
 import ColorBends from "../components/ColorBends";
 import { usePathname } from "next/navigation";
 
-export default function ClientLayout({ children }: { children: React.ReactNode }) {
+export default function ClientLayout() {
     const pathname = usePathname();
 
     const hideBg = pathname == "/pricing" ? true : false;
@@ -11,7 +11,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
     return (
         <>
             {!hideBg && (
-                <div className="object-contain w-screen h-screen absolute z-0">
+                <div className="fixed object-contain w-screen h-screen z-0">
                     <ColorBends
                         colors={['#bd2bf3']}
                         rotation={0}
@@ -26,8 +26,6 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
                     />
                 </div>
             )}
-
-            {children}
         </>
     );
 }

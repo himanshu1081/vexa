@@ -25,7 +25,7 @@ const Navbar: React.FC = () => {
     }
     return (
         <>
-            <div className={` ${instrumentFont.className} flex w-screen justify-center`}>
+            <div className={` ${instrumentFont.className} flex w-full justify-center fixed z-50`}>
 
                 <motion.div
                     initial={{ opacity: 0, y: -30 }}
@@ -51,7 +51,7 @@ const Navbar: React.FC = () => {
                             </div>
                         </div>
                         <div className="flex justify-end">
-                            <Link href='/login' className="md:px-4 md:py-3 bg-[#50056e] rounded-full text-xs px-2 py-1 md:text-sm border border-white/20 cursor-pointer hover:bg-[#7700a5] transition-all duration-75 ease-in">
+                            <Link href='/auth/login' className="md:px-4 md:py-3 bg-[#50056e] rounded-full text-xs px-2 py-1 md:text-sm border border-white/20 cursor-pointer hover:bg-[#7700a5] transition-all duration-75 ease-in">
                                 Get Started
                             </Link>
                         </div>

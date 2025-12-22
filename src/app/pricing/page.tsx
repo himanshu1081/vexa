@@ -92,13 +92,13 @@ export default function Page() {
           <div className="p-1 md:p-2 bg-white  text-black w-fit h-fit rounded-4xl cursor-pointer text-sm md:text-base mt-15 md:mt-20"
             onClick={handleToggle}>
             <div className="flex justify-center items-center gap-2 ">
-              <span className={`${priceUnit == 'month' ? "bg-gray-500" : "bg-white"} w-full h-full p-2 rounded-4xl`}>
+              <span className={`${priceUnit == 'month' ? "bg-[#50056e] text-white" : "bg-white"} w-full h-full p-2 rounded-4xl`}>
                 Monthly
               </span>
               <span>
                 |
               </span>
-              <span className={`${priceUnit == 'year' ? "bg-gray-500" : "bg-white"} p-2 rounded-4xl`}>
+              <span className={`${priceUnit == 'year' ? "bg-[#50056e] text-white" : "bg-white"} p-2 rounded-4xl`}>
                 Yearly
               </span>
             </div>

@@ -20,17 +20,19 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  
   return (
     <html lang="en">
-      <body className={`text-white bg-[#05000f] z-50 ${instrumentFont.className}`}>
-        <div className="fixed z-50">
-          <Navbar />
-        </div>
-        <ClientLayout>
-          <div className="absolute z-49">
-            {children}
-          </div>
-        </ClientLayout>
+      <body className={`relative text-white bg-[#05000f] ${instrumentFont.className}`}>
+
+        <Navbar />
+
+        <ClientLayout />
+
+        <main className="relative z-10 min-h-screen ">
+          {children}
+        </main>
+
       </body>
     </html>
   );
