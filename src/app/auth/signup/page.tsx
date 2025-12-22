@@ -116,7 +116,7 @@ export default function Page() {
           </div>
           <div className="flex justify-around items-center flex-col w-full gap-4">
             <div className="flex gap-2 w-full justify-around items-center ">
-              <span className=" flex justify-center items-center whitespace-nowrap p-2 rounded-md bg-white cursor-pointer gap-2 text-black">
+              <span className=" flex justify-center items-center whitespace-nowrap p-2 rounded-md bg-white/80 cursor-pointer gap-2 text-black hover:bg-white">
                 <FcGoogle size={`${width>500? 25 : 15}`}  />
                 {
                   width > 650 &&
@@ -125,7 +125,7 @@ export default function Page() {
                   </span>
                 }
               </span>
-              <span className=" flex justify-center items-center whitespace-nowrap p-2 rounded-md bg-black cursor-pointer gap-2 text-white">
+              <span className=" flex justify-center items-center whitespace-nowrap p-2 rounded-md bg-black/80 cursor-pointer gap-2 text-white hover:bg-black">
                 <FaGithub size={`${width>500? 25 : 15}`} />
                 {
                   width > 650 &&

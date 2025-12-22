@@ -55,7 +55,7 @@ export default function Page() {
           initial={{ y: 30, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: .8 }}
-          className={`border-2 border-white/20 rounded-lg bg-white/20 backdrop-blur-md p-6 md:p-10 lg:p-15 text-sm h-10/12 w-3/4 md:w-150 flex justify-center flex-col items-center  gap-2`}>
+          className={`border-2 border-white/20 rounded-lg bg-white/20 backdrop-blur-md p-6 md:p-10 lg:p-15 text-sm h-9/12 w-3/4 md:w-150 flex justify-center flex-col items-center  gap-2`}>
           <div className="flex flex-col justify-center items-center">
             <span className={`text-4xl md:text-5xl lg:text-6xl flex justify-center items-center font-bold`}>
               Vexa
@@ -101,7 +101,7 @@ export default function Page() {
           </div>
           <div className="flex justify-around items-center flex-col w-full gap-4">
             <div className="flex gap-2 w-full justify-around items-center ">
-              <span className=" flex justify-center items-center whitespace-nowrap p-2 rounded-md bg-white cursor-pointer gap-2 text-black">
+              <span className=" flex justify-center items-center whitespace-nowrap p-2 rounded-md bg-white/80 cursor-pointer gap-2 text-black hover:bg-white">
                 <FcGoogle size={25} />
                 {
                   width > 650 &&
@@ -110,7 +110,7 @@ export default function Page() {
                   </span>
                 }
               </span>
-              <span className=" flex justify-center items-center whitespace-nowrap p-2 rounded-md bg-black cursor-pointer gap-2 text-white">
+              <span className=" flex justify-center items-center whitespace-nowrap p-2 rounded-md bg-black/80 cursor-pointer gap-2 text-white hover:bg-black">
                 <FaGithub size={25} />
                 {
                   width > 650 &&
