@@ -89,7 +89,7 @@ export default function Page() {
                 </Link>
               </div>
             </span>
-            <Link href='/auth/login' className="md:px-4 md:py-3 px-3 py-1 bg-[#50056e] rounded-full text-base  md:text-sm border border-white/20 cursor-pointer hover:bg-[#7700a5] transition-all duration-75 ease-in">
+            <Link href='/auth/login' className="md:px-4 md:py-3 px-3 py-1 bg-[#50056e] rounded-full text-base  md:text-sm border border-white/20 cursor-pointer hover:bg-[#7700a5] ">
               Log In
             </Link>
           </div>

@@ -12,7 +12,6 @@ import { supabase } from "../../lib/supabase"
 import { FcGoogle } from "react-icons/fc";
 import { FaGithub } from "react-icons/fa";
 import { BiSolidHide, BiSolidShow } from "react-icons/bi";
-import { AuthError } from "@supabase/supabase-js";
 
 const inter = Inter({
   subsets: ["latin"],
