@@ -1,5 +1,5 @@
 "use client";
-import PricingCard from "../../components/PricingCard";
+import PricingCard from "../../../components/PricingCard";
 import { Inter } from "next/font/google";
 import { motion } from "motion/react"
 import { useState } from "react";

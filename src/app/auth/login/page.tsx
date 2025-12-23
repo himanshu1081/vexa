@@ -55,11 +55,11 @@ export default function Page() {
           initial={{ y: 30, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: .8 }}
-          className={`border-2 border-white/20 rounded-lg bg-white/20 backdrop-blur-md p-6 md:p-10 lg:p-15 text-sm h-9/12 w-3/4 md:w-150 flex justify-center flex-col items-center  gap-2`}>
+          className={`border-2 border-white/20 rounded-lg bg-white/20 backdrop-blur-md p-6 md:p-10 lg:p-15 text-sm h-10/12 w-11/12 md:w-130 flex justify-center flex-col items-center  gap-2`}>
           <div className="flex flex-col justify-center items-center">
-            <span className={`text-4xl md:text-5xl lg:text-6xl flex justify-center items-center font-bold`}>
+            <Link href={'/'} className={`text-4xl md:text-5xl lg:text-6xl flex justify-center items-center font-bold`}>
               Vexa
-            </span>
+            </Link>
           </div>
           <div className="flex justify-center items-center flex-col w-full md:w-3/4 gap-4 md:gap-6">
             <span className={`text-xl md:text-lg lg:text-4xl ${inter.className} font-bold `}>
@@ -123,7 +123,7 @@ export default function Page() {
             <div className="flex flex-col md:flex-row md:gap-2 items-center justify-center text-xs md:text-sm">
               Don't have an account ?
               <Link href="/auth/signup" className=" hover:text-white underline">
-                Click here
+                Sign up
               </Link>
             </div>
           </div>

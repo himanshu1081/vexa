@@ -1,5 +1,4 @@
 import "./globals.css";
-import Navbar from "../components/Navbar";
 import { Inter } from "next/font/google";
 import { Instrument_Sans } from "next/font/google";
 import ClientLayout from "./ClientLayout";
@@ -20,15 +19,11 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  
+
   return (
     <html lang="en">
       <body className={`relative text-white bg-[#05000f] ${instrumentFont.className}`}>
-
-        <Navbar />
-
         <ClientLayout />
-
         <main className="relative z-10 min-h-screen ">
           {children}
         </main>

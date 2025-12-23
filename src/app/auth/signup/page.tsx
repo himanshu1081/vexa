@@ -3,9 +3,8 @@ import { Inter } from "next/font/google";
 import { Instrument_Sans } from "next/font/google";
 import { motion } from "motion/react"
 import Link from "next/link";
-import { useState, useEffect } from "react";
-
-
+import { useState, useEffect, use } from "react";
+import { supabase } from "../../lib/supabase"
 
 
 
@@ -13,6 +12,7 @@ import { useState, useEffect } from "react";
 import { FcGoogle } from "react-icons/fc";
 import { FaGithub } from "react-icons/fa";
 import { BiSolidHide, BiSolidShow } from "react-icons/bi";
+import { AuthError } from "@supabase/supabase-js";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -32,6 +32,13 @@ export default function Page() {
     confirmPassword: boolean;
   };
 
+  type UserData = {
+    name: string,
+    email: string,
+    password: string,
+    confirmPassword: string
+  }
+
   const [showPassword, setShowPassword] = useState<ShowPasswordState>({
     password: false,
     confirmPassword: false
@@ -47,6 +54,71 @@ export default function Page() {
 
   const [width, setWidth] = useState<number>();
 
+  const [userData, setUserData] = useState<UserData>(
+    {
+      name: "",
+      email: "",
+      password: "",
+      confirmPassword: ""
+    }
+  )
+
+  const handleUserDataChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setUserData(prev => ({
+      ...prev,
+      [name]: value,
+    }));
+  }
+
+  const [error, setError] = useState<string>("");
+
+  async function signUpNewUser() {
+    if (userData.password != userData.confirmPassword) {
+      setError("Password does not match!")
+      return;
+    }
+    const { data, error } = await supabase.auth.signUp({
+      email: userData.email,
+      password: userData.password,
+      options: {
+        emailRedirectTo: 'http://localhost:3000/auth/signin',
+      },
+    })
+
+    if (!error) {
+      const { error } = await supabase.from('users').insert({
+        id: data.user.id,
+        email: data.user.email,
+        name: userData.name
+      })
+
+      if (error) {
+        setError(error.message)
+      }
+    } else {
+      setError(error.message)
+    }
+  }
+
+  async function signUpWithGoogle() {
+    await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: "http://localhost:3000/auth/callback",
+      },
+    });
+  }
+
+  async function signUpWithGithub() {
+    await supabase.auth.signInWithOAuth({
+      provider: "github",
+      options: {
+        redirectTo: "http://localhost:3000/auth/callback",
+      },
+    });
+  }
+
 
   return (
     <>
@@ -55,29 +127,41 @@ export default function Page() {
           initial={{ y: 30, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: .8 }}
-          className={`border-2 border-white/20 rounded-lg bg-white/20 backdrop-blur-md p-6 md:p-10 lg:p-15 text-sm h-10/12 w-3/4 md:w-150 flex justify-center flex-col items-center gap-2`}>
+          className={`border-2 border-white/20 rounded-lg bg-white/20 backdrop-blur-md p-6 md:p-10 lg:p-15 text-sm h-10/12 w-11/12 md:w-130 flex justify-center flex-col items-center gap-2`}>
           <div className="flex flex-col justify-center items-center">
-            <span className={`text-4xl md:text-5xl lg:text-6xl flex justify-center items-center font-bold`}>
+            <Link href={'/'} className={`text-4xl md:text-5xl lg:text-6xl flex justify-center items-center font-bold`}>
               Vexa
-            </span>
+            </Link>
           </div>
           <div className="flex justify-center items-center flex-col w-full md:w-3/4 gap-4 md:gap-6">
+
             <span className={`text-base md:text-lg lg:text-xl ${inter.className} font-bold `}>
               Create a new account.
             </span>
+
             <span
               className={` flex flex-col gap-2 w-full justify-center items-center text-black ${inter.className} placeholder:text-white `}>
               <input
                 type="text"
+                name="name"
+                onChange={handleUserDataChange}
                 placeholder="Name"
                 className="w-11/12 border border-white/20 rounded-md p-2 focus:outline-none focus:ring-0 bg-white/50" />
               <input type="email"
+                name="email"
+                onChange={handleUserDataChange}
                 placeholder="Email"
                 className="w-11/12 border border-white/20 rounded-md p-2 focus:outline-none focus:ring-0 bg-white/50" />
               <span
                 className="w-11/12 border border-white/20 rounded-md p-2 md: focus:outline-none focus:ring-0 bg-white/50 flex justify-between items-center gap-1">
-                <input type={`${showPassword.password ? "text" : "password"}`} placeholder="Password" className="w-11/12 rounded-md focus:outline-none focus:ring-0 " />
-                <span onClick={() => setShowPassword(prev => ({ ...prev, password: !prev.password }))}>
+                <input
+                  name="password"
+                  onChange={handleUserDataChange}
+                  type={`${showPassword.password ? "text" : "password"}`}
+                  placeholder="Password"
+                  className="w-11/12 rounded-md focus:outline-none focus:ring-0 " />
+                <span
+                  onClick={() => setShowPassword(prev => ({ ...prev, password: !prev.password }))}>
                   {
                     showPassword.password ?
                       <BiSolidHide />
@@ -89,8 +173,10 @@ export default function Page() {
               <span
                 className="w-11/12 border border-white/20 rounded-md p-2 focus:outline-none focus:ring-0 bg-white/50 flex justify-between items-center gap-1">
                 <input
+                  name="confirmPassword"
+                  onChange={handleUserDataChange}
                   type={`${showPassword.confirmPassword ? "text" : "password"}`}
-                  placeholder="Password"
+                  placeholder="Confirm Password"
                   className="w-11/12 rounded-md focus:outline-none focus:ring-0 " />
                 <span
                   onClick={() => setShowPassword(prev => ({ ...prev, confirmPassword: !prev.confirmPassword }))}>
@@ -103,10 +189,21 @@ export default function Page() {
                   }
                 </span>
               </span>
+              {
+                error != "" ?
+                  <div className="text-red-500">
+                    {error}
+                  </div>
+                  :
+                  <>
+                  </>
+              }
             </span>
-            <Link href='/auth/login' className="md:px-4 md:py-3 px-3 py-1 bg-[#50056e] rounded-full text-base  md:text-sm border border-white/20 cursor-pointer hover:bg-[#7700a5] transition-all duration-75 ease-in">
+            <span
+              onClick={signUpNewUser}
+              className="md:px-4 md:py-3 px-3 py-1 bg-[#50056e] rounded-full text-base  md:text-sm border border-white/20 cursor-pointer hover:bg-[#7700a5] transition-all duration-75 ease-in">
               Sign Up
-            </Link>
+            </span>
           </div>
 
           <div className="flex items-center w-full my-4">
@@ -116,8 +213,8 @@ export default function Page() {
           </div>
           <div className="flex justify-around items-center flex-col w-full gap-4">
             <div className="flex gap-2 w-full justify-around items-center ">
-              <span className=" flex justify-center items-center whitespace-nowrap p-2 rounded-md bg-white/80 cursor-pointer gap-2 text-black hover:bg-white">
-                <FcGoogle size={`${width>500? 25 : 15}`}  />
+              <span onClick={signUpWithGoogle} className=" flex justify-center items-center whitespace-nowrap p-2 rounded-md bg-white/80 cursor-pointer gap-2 text-black hover:bg-white">
+                <FcGoogle size={`${width > 500 ? 25 : 15}`} />
                 {
                   width > 650 &&
                   <span>
@@ -125,8 +222,8 @@ export default function Page() {
                   </span>
                 }
               </span>
-              <span className=" flex justify-center items-center whitespace-nowrap p-2 rounded-md bg-black/80 cursor-pointer gap-2 text-white hover:bg-black">
-                <FaGithub size={`${width>500? 25 : 15}`} />
+              <span onClick={signUpWithGithub} className=" flex justify-center items-center whitespace-nowrap p-2 rounded-md bg-black/80 cursor-pointer gap-2 text-white hover:bg-black">
+                <FaGithub size={`${width > 500 ? 25 : 15}`} />
                 {
                   width > 650 &&
                   <span>
