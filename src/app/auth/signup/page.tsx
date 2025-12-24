@@ -51,7 +51,7 @@ export default function Page() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const [width, setWidth] = useState<number>();
+  const [width, setWidth] = useState<number>(0);
 
   const [userData, setUserData] = useState<UserData>(
     {
@@ -72,7 +72,10 @@ export default function Page() {
 
   const [error, setError] = useState<string>("");
 
+  const [notice, setNotice] = useState<string>("");
+
   async function signUpNewUser() {
+    setError("")
     if (userData.password != userData.confirmPassword) {
       setError("Password does not match!")
       return;
@@ -81,23 +84,18 @@ export default function Page() {
       email: userData.email,
       password: userData.password,
       options: {
-        emailRedirectTo: 'http://localhost:3000/auth/signin',
+        emailRedirectTo: `${location.origin}/auth/callback`,
+        data: {
+          name: userData.name,
+        }
       },
     })
-
-    if (!error) {
-      const { error } = await supabase.from('users').insert({
-        id: data.user.id,
-        email: data.user.email,
-        name: userData.name
-      })
-
-      if (error) {
-        setError(error.message)
-      }
-    } else {
-      setError(error.message)
+    if (error) {
+      console.log(error)
+      setError("Something went wrong")
+      return;
     }
+    setNotice("We have sent a Confirmation Email")
   }
 
   async function signUpWithGoogle() {
@@ -190,12 +188,20 @@ export default function Page() {
               </span>
               {
                 error != "" ?
-                  <div className="text-red-500">
+                  <div className="w-fit whitespace-break-spaces h-fit border border-red-500/20 rounded-md p-1 focus:outline-none focus:ring-0 bg-red-500/70 text-white text-center">
                     {error}
                   </div>
                   :
                   <>
                   </>
+              }
+              {
+                notice &&
+                <span>
+                  <div className="w-fit whitespace-break-spaces h-fit border border-green-500/20 rounded-md p-1 focus:outline-none focus:ring-0 bg-green-500/20 text-green-200 text-center">
+                    {notice}
+                  </div>
+                </span>
               }
             </span>
             <span

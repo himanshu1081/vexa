@@ -2,8 +2,11 @@
 import { Inter } from "next/font/google";
 import { Instrument_Sans } from "next/font/google";
 import { useState, useEffect } from "react";
+import { supabase } from "../lib/supabase";
+import { useRouter } from "next/navigation";
 
 //icons
+
 
 const inter = Inter({
     subsets: ["latin"],
@@ -18,10 +21,19 @@ const instrumentFont = Instrument_Sans({
 
 export default function Page() {
 
+    const router = useRouter();
+
+
     //check if user is logged in
     useEffect(() => {
-        
-    },[])
+
+    }, [])
+
+    const logout = async () => {
+        await supabase.auth.signOut()
+        router.push("/auth/login")
+    }
+
 
     return (
         <>
@@ -30,7 +42,14 @@ export default function Page() {
                     Dashboard
                 </div>
                 <div className="flex justify-center items-center flex-1 h-full bg-yellow-300">
-                    Chat Page
+                    <span>
+                        Chat Page
+                    </span>
+                    <span
+                        onClick={logout}
+                        className="border p-2 text-4xl cursor-pointer bg-red-700">
+                        Log out
+                    </span>
                 </div>
             </div>
         </>

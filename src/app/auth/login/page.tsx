@@ -4,6 +4,8 @@ import { Instrument_Sans } from "next/font/google";
 import { motion } from "motion/react"
 import Link from "next/link";
 import { useState, useEffect } from "react";
+import { redirect, useRouter } from "next/navigation";
+import { supabase } from "../../lib/supabase";
 
 
 
@@ -27,6 +29,10 @@ const instrumentFont = Instrument_Sans({
 
 export default function Page() {
 
+  const [notice, setNotice] = useState<string>("");
+
+  const [resetPopUp, setResetPopUp] = useState<boolean>(false)
+
   type ShowPasswordState = {
     password: boolean;
     confirmPassword: boolean;
@@ -37,20 +43,154 @@ export default function Page() {
     confirmPassword: false
   })
 
+  const router = useRouter();
+
   useEffect(() => {
+    const checkSession = async () => {
+      const { data } = await supabase.auth.getSession();
+
+      if (data.session) {
+        router.push("/chat");
+      }
+    };
+
     const handleResize = () => setWidth(window.innerWidth);
     handleResize();
+    checkSession();
 
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const [width, setWidth] = useState<number>();
+  const [width, setWidth] = useState<number>(0);
 
+  const handleUserDataChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setError("");
+    setNotice("");
+    const { name, value } = e.target;
+
+    setUserData(prev => ({
+      ...prev,
+      [name]: value
+    }))
+  }
+
+  type UserData = {
+    email: string,
+    password: string
+  }
+
+  const [userData, setUserData] = useState<UserData>({
+    email: "",
+    password: ""
+  })
+
+  const [error, setError] = useState<string>("");
+
+  const signInWithPassword = async () => {
+    if (userData.email == "") {
+      setError("Enter Email!")
+      return;
+    }
+
+    if (userData.password == "") {
+      setError("Enter Password!")
+      return;
+    }
+
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: userData.email,
+      password: userData.password,
+    })
+
+    if (error) {
+      setError(error.message)
+      return;
+    }
+    router.push("/chat")
+  }
+
+  const resetLink = async () => {
+    if (userData.email == "") {
+      return;
+    }
+    const { error } = await supabase.auth.resetPasswordForEmail(
+      userData.email,
+      {
+        redirectTo: `${location.origin}/auth/reset-password`
+      }
+    );
+
+    if (error) {
+      console.error(error)
+    }
+
+    setNotice("If an account exists with this email, you’ll receive a reset link.")
+  }
+
+  const signInWithGoogle = async () => {
+    await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: `${location.origin}/auth/callback`,
+      },
+    })
+  }
+
+  const signInWithGithub = async () => {
+    await supabase.auth.signInWithOAuth({
+      provider: "github",
+      options: {
+        redirectTo: `${location.origin}/auth/callback`,
+      },
+    })
+  }
 
   return (
     <>
       <div className={`${instrumentFont.variable} flex justify-center items-center h-screen w-screen whitespace-nowrap `}>
+        {
+          resetPopUp &&
+          <>
+            <div
+              onClick={() => setResetPopUp(!resetPopUp)}
+              className="w-screen h-screen absolute z-100 bg-black/70">
+            </div>
+            <div
+              className={`border-2 border-white/20 rounded-lg bg-white/20 backdrop-blur-md p-6 md:p-10 lg:p-15 text-sm h-fit w-fit flex justify-center flex-col items-center gap-2 absolute z-101`}>
+              <div className="w-full h-full p-4 flex flex-col justify-center items-center gap-4 ">
+                <span className={`text-4xl lg:text-6xl flex justify-center items-center font-bold`}>
+                  Enter your email
+                </span>
+                <span className="flex gap-2 flex-col w-full justify-center items-center">
+                  <span
+                    className="w-11/12 border border-white/20 rounded-md p-2 md: focus:outline-none focus:ring-0 bg-white/50 flex justify-between items-center gap-1">
+                    <input
+                      name="email"
+                      value={userData.email}
+                      onChange={handleUserDataChange}
+                      type="email"
+                      placeholder="Email"
+                      className="w-11/12 rounded-md focus:outline-none focus:ring-0 " />
+                  </span>
+                  {
+                    notice &&
+                    <span>
+                      <div className="w-fit whitespace-break-spaces h-fit border border-green-500/20 rounded-md p-1 focus:outline-none focus:ring-0 bg-green-500/20 text-green-200 text-center">
+                        {notice}
+                      </div>
+                    </span>
+                  }
+                </span>
+                <span
+                  onClick={resetLink}
+                  className="md:px-4 md:py-3 px-3 py-1 bg-[#50056e] rounded-full text-base  md:text-sm border border-white/20 cursor-pointer hover:bg-[#7700a5] ">
+                  Send reset link
+                </span>
+              </div>
+            </div>
+          </>
+        }
         <motion.div
           initial={{ y: 30, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
@@ -67,13 +207,24 @@ export default function Page() {
             </span>
             <span
               className={` flex flex-col gap-2 w-full justify-center items-center text-black ${inter.className} placeholder:text-white `}>
-              <input type="email"
+              <input
+                type="email"
                 placeholder="Email"
+                name="email"
+                value={userData.email}
+                onChange={handleUserDataChange}
                 className="w-11/12 border border-white/20 rounded-md p-2 focus:outline-none focus:ring-0 bg-white/50" />
               <span
                 className="w-11/12 border border-white/20 rounded-md p-2 md: focus:outline-none focus:ring-0 bg-white/50 flex justify-between items-center gap-1">
-                <input type={`${showPassword.password ? "text" : "password"}`} placeholder="Password" className="w-11/12 rounded-md focus:outline-none focus:ring-0 " />
-                <span onClick={() => setShowPassword(prev => ({ ...prev, password: !prev.password }))}>
+                <input
+                  name="password"
+                  value={userData.password}
+                  onChange={handleUserDataChange}
+                  type={`${showPassword.password ? "text" : "password"}`}
+                  placeholder="Password"
+                  className="w-11/12 rounded-md focus:outline-none focus:ring-0 " />
+                <span
+                  onClick={() => setShowPassword(prev => ({ ...prev, password: !prev.password }))}>
                   {
                     showPassword.password ?
                       <BiSolidHide />
@@ -82,16 +233,27 @@ export default function Page() {
                   }
                 </span>
               </span>
+              {
+                error != "" ?
+                  <div className="w-fit whitespace-break-spaces h-fit border border-red-500/20 rounded-md p-1 focus:outline-none focus:ring-0 bg-red-500/70 text-white text-center">
+                    {error}
+                  </div>
+                  :
+                  <>
+                  </>
+              }
               <div className="flex flex-col md:flex-row md:gap-2 items-center justify-center text-xs md:text-sm text-white">
                 Forgot password ?
-                <Link href="/auth/login" className=" hover:text-white underline">
+                <span onClick={() => setResetPopUp(!resetPopUp)} className=" hover:text-white underline cursor-pointer">
                   Reset here
-                </Link>
+                </span>
               </div>
             </span>
-            <Link href='/auth/login' className="md:px-4 md:py-3 px-3 py-1 bg-[#50056e] rounded-full text-base  md:text-sm border border-white/20 cursor-pointer hover:bg-[#7700a5] ">
+            <span
+              onClick={signInWithPassword}
+              className="md:px-4 md:py-3 px-3 py-1 bg-[#50056e] rounded-full text-base  md:text-sm border border-white/20 cursor-pointer hover:bg-[#7700a5] ">
               Log In
-            </Link>
+            </span>
           </div>
 
           <div className="flex items-center w-full my-4">
@@ -101,7 +263,9 @@ export default function Page() {
           </div>
           <div className="flex justify-around items-center flex-col w-full gap-4">
             <div className="flex gap-2 w-full justify-around items-center ">
-              <span className=" flex justify-center items-center whitespace-nowrap p-2 rounded-md bg-white/80 cursor-pointer gap-2 text-black hover:bg-white">
+              <span
+                onClick={signInWithGoogle}
+                className=" flex justify-center items-center whitespace-nowrap p-2 rounded-md bg-white/80 cursor-pointer gap-2 text-black hover:bg-white">
                 <FcGoogle size={25} />
                 {
                   width > 650 &&
@@ -110,7 +274,9 @@ export default function Page() {
                   </span>
                 }
               </span>
-              <span className=" flex justify-center items-center whitespace-nowrap p-2 rounded-md bg-black/80 cursor-pointer gap-2 text-white hover:bg-black">
+              <span
+                onClick={signInWithGithub}
+                className=" flex justify-center items-center whitespace-nowrap p-2 rounded-md bg-black/80 cursor-pointer gap-2 text-white hover:bg-black">
                 <FaGithub size={25} />
                 {
                   width > 650 &&
