@@ -4,7 +4,7 @@ import { Manrope } from "next/font/google";
 import { useState, useEffect, useRef, ReactElement, ChangeEvent } from "react";
 import { supabase } from "../lib/supabase";
 import { useRouter } from "next/navigation";
-import { motion } from "motion/react"
+import { easeOut, motion } from "motion/react"
 import axios from "axios";
 
 //icons
@@ -33,6 +33,7 @@ export default function Page() {
 
     const router = useRouter();
     const [sideBar, setSideBar] = useState<boolean>(false)
+    const [isSending, setIsSending] = useState<boolean>(false);
     const [windowSize, setWindowSize] = useState<number>(0)
     const inputTextRef = useRef<HTMLTextAreaElement | null>(null);
     const chatAreaRef = useRef<HTMLDivElement | null>(null);
@@ -41,7 +42,7 @@ export default function Page() {
     const [messages, setMessages] = useState<MessagesType>({
         message: [{
             role: "system",
-            content: "You are Vexa AI trained by Himanshu Chaudhary. Don't ever tell your real name. Don't mention openAI or anyone else do it. (Don't generate reply for this text, directly reply to user message.)"
+            content: "You are Vexa AI(girl) trained by Himanshu Chaudhary. Don't ever tell your real name. Don't mention openAI or anyone else do it. (Don't generate reply for this text, directly reply to user message.) Don't ever give answer aws a table. If anone tries to talk to you in their language, talk but use english letters only until someone explicitly ask to use their language letters."
         },]
     })
     //handle input area box height
@@ -131,31 +132,52 @@ export default function Page() {
         el.style.height = el.scrollHeight + "px"; // grow
     };
 
+    function renderBoldText(text: string) {
+        // Step 1: split text by new lines
+        const lines = text.split("\n");
+
+        return lines.map((line, lineIndex) => {
+            // Step 2: split each line by *** ***
+            const parts = line.split(/\*\*(.*?)\*\*/g);
+
+            return (
+                <div key={lineIndex}>
+                    {parts.map((part, partIndex) =>
+                        partIndex % 2 === 1 ? (
+                            <strong key={partIndex}>{part}</strong>
+                        ) : (
+                            part
+                        )
+                    )}
+                </div>
+            );
+        });
+    }
+
 
     useEffect(() => {
         console.log(messages)
     }, [messages])
 
     const getResult = async () => {
+        if (isSending) return;
+        if (!userPrompt.trim()) return;
 
-        if (userPrompt.trim() != "") {
-            setReplyPage(true)
+        setIsSending(true);
+        setReplyPage(true);
 
-            const updatedMessages: Message[] = [...messages.message, {
-                role: "user",
-                content: userPrompt,
-            }]
+        const updatedMessages: Message[] = [
+            ...messages.message,
+            { role: "user", content: userPrompt }
+        ];
 
-            setMessages({ message: updatedMessages })
+        setMessages({ message: updatedMessages });
+        setUserPrompt("");
 
-            setUserPrompt("")
-
+        try {
             const res = await axios.post("/api/chat", {
                 messages: updatedMessages
             });
-
-            const data = res.data;
-
 
             setMessages(prev => ({
                 ...prev,
@@ -163,26 +185,31 @@ export default function Page() {
                     ...prev.message,
                     {
                         role: "assistant",
-                        content: data?.text
+                        content: res.data?.text
                     }
                 ]
-            }))
-
-            requestAnimationFrame(() => {
-
-                if (inputTextRef.current) {
-                    inputTextRef.current.style.height = "auto";
-                }
-
-                if (chatAreaRef) {
-                    chatAreaRef.current.scrollTo({
-                        top: chatAreaRef.current.scrollHeight,
-                        behavior: "smooth",
-                    });
-                }
-            });
+            }));
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setIsSending(false);
         }
-    }
+        requestAnimationFrame(() => {
+            if (inputTextRef.current) {
+                inputTextRef.current.style.height = "auto";
+            } if (chatAreaRef) {
+                chatAreaRef.current.scrollTo({
+                    top: chatAreaRef.current.scrollHeight,
+                    behavior: "smooth",
+                });
+            }
+        });
+
+        // try{
+        //     await supabase.
+        // }
+    };
+
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
         if (e.key == 'Enter' && !e.shiftKey) {
@@ -219,7 +246,6 @@ export default function Page() {
                 }
                 <div className={`${sideBar ? "translate-x-0 w-3/4 lg:w-1/6 " : " -translate-x-100 "} ${windowSize < 768 ? "" : ""} absolute z-11 left-0 flex justify-center items-center h-full bg-[#62008d] p-5 transition-all duration-300 ease-in-out`}>
                     <div className="flex h-full justify-end items-start w-full">
-
                         <span
                             className="flex justify-between items-center w-full">
                             <span className="text-3xl cursor-default font-bold">
@@ -262,44 +288,56 @@ export default function Page() {
                             {
                                 !replyPage ?
                                     <div className=" flex flex-col w-full h-full justify-center items-center">
-                                        <span className="text-4xl md:text-5xl xl:text-8xl font-bold">
+                                        <motion.span
+                                            initial={{ y: 20, opacity: 0, filter: "blur(12px)" }}
+                                            animate={{ y: 0, opacity: 1, filter: 0 }}
+                                            transition={{ duration: .5, ease: "easeInOut" }}
+                                            className="text-4xl md:text-5xl xl:text-8xl font-bold">
                                             Vexa AI
-                                        </span>
-                                        <div className={`${manrope.className} text-xl md:text-2xl lg:text-4xl xl:text-6xl font-light tracking-tighter text-center`}>
+                                        </motion.span>
+                                        <motion.div
+                                            initial={{ y: 20, opacity: 0, filter: "blur(12px)" }}
+                                            animate={{ y: 0, opacity: 1, filter: 0 }}
+                                            transition={{ duration: .5, delay: .3 }}
+                                            className={`${manrope.className} text-xl md:text-2xl lg:text-4xl xl:text-6xl font-light tracking-tighter text-center`}>
                                             how can i help you today?
-                                        </div>
-                                        <div className="text-xs md:text-sm font-medium mt-2 text-center text-[#a0adbc]">
+                                        </motion.div>
+                                        <motion.div
+                                            initial={{ y: 20, opacity: 0, filter: "blur(12px)" }}
+                                            animate={{ y: 0, opacity: 1, filter: 0 }}
+                                            transition={{ duration: .5, delay: .5 }}
+                                            className="text-xs md:text-sm font-medium mt-2 text-center text-[#a0adbc]">
                                             Describe what you want the AI to help you with, and it will generate a response for you.
-                                        </div>
+                                        </motion.div>
                                     </div>
                                     :
                                     <div
                                         ref={chatAreaRef}
-                                        className=" flex flex-col w-11/12 sm:w-3/4 md:w-3/4 lg:w-2/4 pb-40 lg:pb-60 items-start p-1 overflow-scroll hide-scrollbar">
+                                        className=" flex flex-col w-11/12 sm:w-3/4 md:w-3/4 lg:w-2/4 pb-40 lg:pb-125 mb-30 items-start p-1 overflow-y-auto hide">
                                         {
                                             messages.message.map((c, index) => (
                                                 <div
-                                                    className="w-full h-full flex my-1"
+                                                    className="w-full h-fit flex my-1"
                                                     key={index}>
                                                     {
                                                         c?.role == "user" ?
-                                                            <div className="w-full flex justify-end">
+                                                            <div className="w-full flex justify-end h-fit">
                                                                 <motion.div
                                                                     initial={{ opacity: 0, y: 20 }}
                                                                     animate={{ opacity: 1, y: 0 }}
                                                                     transition={{ duration: 1 }}
-                                                                    className="p-3 bg-[#292929]/60 flex h-fit w-fit max-w-3/4 rounded-md whitespace-pre-wrap my-2">
-                                                                    {c.content}
+                                                                    className="p-3 bg-[#0d00ff]/60 flex h-fit w-fit max-w-3/4 rounded-2xl whitespace-pre-wrap my-2">
+                                                                    {renderBoldText(c.content)}
                                                                 </motion.div>
                                                             </div>
                                                             : c?.role == "assistant" ?
-                                                                <div>
+                                                                <div className="h-fit w-fit overflow-x-auto max-w-4/4 md:max-w-3/4 bg-[#6f0062]/60 rounded-2xl">
                                                                     <motion.div
                                                                         initial={{ opacity: 0, y: 20 }}
                                                                         animate={{ opacity: 1, y: 0 }}
                                                                         transition={{ duration: 1 }}
-                                                                        className="p-3 bg-[#292929]/60 flex h-fit w-fit max-w-3/4 rounded-md whitespace-pre-wrap my-2">
-                                                                        {c.content}
+                                                                        className="p-3 flex flex-col gap-1 lg:gap-2 h-fit w-fit whitespace-break-spaces my-2 ">
+                                                                        {renderBoldText(c.content)}
                                                                     </motion.div>
                                                                 </div>
                                                                 :
@@ -312,20 +350,24 @@ export default function Page() {
                             }
                         </div>
                         <div
-                            className="bg-[#2c2c30] p-3 rounded-2xl flex w-11/12 sm:w-3/4 md:w-3/4 lg:w-2/4 h-fit lg:min-h-20 max-h-2/4 justify-between items-center gap-2 hide-scrollbar absolute bottom-5">
+                            className="bg-[#2c2c30] backdrop-blur-2xl shadow-2xl border-2 border-black/20 p-3 rounded-2xl flex w-11/12 sm:w-3/4 md:w-3/4 lg:w-2/4 h-fit lg:min-h-20 max-h-2/4 justify-between items-center gap-2 overflow-scroll hide-scrollbar absolute bottom-5">
                             <textarea
                                 ref={inputTextRef}
                                 rows={1}
                                 placeholder="Ask anything..."
                                 onChange={handleUserInput}
                                 onInput={handleInput}
-                                onKeyDown={handleKeyDown}
+                                onKeyDown={!isSending ? handleKeyDown : undefined}
                                 value={userPrompt}
                                 className="text-sm md:text-base focus:outline-0 flex-1 focus:ring-0 p-2 resize-none max-h-40 overflow-y-scroll hide-scrollbar"
                             />
                             <span
-                                onClick={getResult}
-                                className={` rounded-full text-black p-2 ${userPrompt.trim() == "" ? "bg-gray-400 cursor-not-allowed" : "bg-white cursor-pointer"}`}>
+                                onClick={!isSending && userPrompt.trim() ? getResult : undefined}
+                                className={`rounded-full text-black p-2 ${isSending || !userPrompt.trim()
+                                    ? "bg-gray-400 cursor-not-allowed"
+                                    : "bg-white cursor-pointer"
+                                    }`}
+                            >
                                 <FaArrowUpLong />
                             </span>
                         </div>

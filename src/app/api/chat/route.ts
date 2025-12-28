@@ -17,7 +17,7 @@ export async function POST(req: Request) {
         model: "openai/gpt-oss-120b",
         messages,
         temperature: 0.7,
-        max_tokens: 150,
+        max_tokens: 850,
     });
 
 

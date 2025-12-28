@@ -1,9 +1,49 @@
 @import "tailwindcss";
+
+/* Hide scrollbar (use where needed) */
 .hide-scrollbar {
-  scrollbar-width: none;        /* Firefox */
-  -ms-overflow-style: none;     /* IE / Edge */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
 .hide-scrollbar::-webkit-scrollbar {
-  display: none;                /* Chrome / Safari */
+  display: none;
+}
+
+/* Global scrollbar variables */
+:root {
+  --sb-track-color: #232E33;
+  --sb-thumb-color: #7022ad;
+  --sb-size: 5px;
+}
+
+/* Scrollbar (both directions) */
+*::-webkit-scrollbar {
+  width: var(--sb-size);   /* vertical */
+  height: var(--sb-size); /* horizontal */
+}
+
+/* Track */
+*::-webkit-scrollbar-track {
+  background: var(--sb-track-color);
+  border-radius: 3px;
+}
+
+/* Thumb */
+*::-webkit-scrollbar-thumb {
+  background: var(--sb-thumb-color);
+  border-radius: 3px;
+}
+
+/* Thumb hover (nice UX) */
+*::-webkit-scrollbar-thumb:hover {
+  background: #8c3ad6;
+}
+
+/* Firefox */
+@supports not selector(::-webkit-scrollbar) {
+  * {
+    scrollbar-color: var(--sb-thumb-color) var(--sb-track-color);
+    scrollbar-width: thin;
+  }
 }
