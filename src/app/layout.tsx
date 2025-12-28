@@ -1,7 +1,6 @@
 import "./globals.css";
 import { Inter } from "next/font/google";
 import { Instrument_Sans } from "next/font/google";
-import ClientLayout from "./ClientLayout";
 
 const inter = Inter({ subsets: ["latin"], weight: "700" });
 
@@ -23,7 +22,6 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`relative text-white bg-[#05000f] ${instrumentFont.className}`}>
-        <ClientLayout />
         <main className="relative z-10 min-h-screen ">
           {children}
         </main>

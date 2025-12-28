@@ -1,0 +1,38 @@
+.gradient-background {
+  position: relative;
+  min-height: 100vh;
+  background: #000;
+  overflow: hidden;
+}
+
+.gradient-background::before {
+  content: "";
+  position: absolute;
+  bottom: -40%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 120%;
+  height: 120%;
+  background: radial-gradient(
+    circle at bottom,
+    #a900c7 0%,
+    darkviolet 30%,
+    transparent 65%
+  );
+  animation: glow-rise 6s ease-in-out infinite;
+}
+
+@keyframes glow-rise {
+  0% {
+    transform: translateX(-50%) scale(0.9);
+    opacity: 0.4;
+  }
+  50% {
+    transform: translateX(-50%) scale(1.1);
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateX(-50%) scale(0.9);
+    opacity: 0.4;
+  }
+}

@@ -188,7 +188,7 @@ export default function Page() {
               </span>
               {
                 error != "" ?
-                  <div className="w-fit whitespace-break-spaces h-fit border border-red-500/20 rounded-md p-1 focus:outline-none focus:ring-0 bg-red-500/70 text-white text-center">
+                  <div className="w-fit whitespace-break-spaces h-fit border border-red-500 rounded-md p-1 focus:outline-none focus:ring-0 bg-red-500/30 text-center text-red-300">
                     {error}
                   </div>
                   :

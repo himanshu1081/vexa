@@ -110,6 +110,12 @@ export default function Page() {
     router.push("/chat")
   }
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key == "Enter") {
+      signInWithPassword()
+    }
+  }
+
   const resetLink = async () => {
     if (userData.email == "") {
       return;
@@ -219,6 +225,7 @@ export default function Page() {
                 <input
                   name="password"
                   value={userData.password}
+                  onKeyDown={handleKeyDown}
                   onChange={handleUserDataChange}
                   type={`${showPassword.password ? "text" : "password"}`}
                   placeholder="Password"
@@ -235,7 +242,7 @@ export default function Page() {
               </span>
               {
                 error != "" ?
-                  <div className="w-fit whitespace-break-spaces h-fit border border-red-500/20 rounded-md p-1 focus:outline-none focus:ring-0 bg-red-500/70 text-white text-center">
+                  <div className="w-fit whitespace-break-spaces h-fit border border-red-500 rounded-md p-1 focus:outline-none focus:ring-0 bg-red-500/30 text-center text-red-300">
                     {error}
                   </div>
                   :
