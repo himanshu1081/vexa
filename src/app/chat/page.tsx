@@ -1,14 +1,16 @@
 "use client";
 import { Inter, Instrument_Sans } from "next/font/google";
 import { Manrope } from "next/font/google";
-import { useState, useEffect, useRef, ReactElement, ChangeEvent } from "react";
+import { useState, createContext, useRef, ChangeEvent, useContext, useEffect } from "react";
 import { supabase } from "../lib/supabase";
 import { useRouter } from "next/navigation";
-import { easeOut, motion } from "motion/react"
+import { motion } from "motion/react"
 import axios from "axios";
+import { MessageContext } from "./layout";
+import { SidebarContext } from "./layout";
+import { useParams } from "next/navigation";
 
 //icons
-import { RiArrowLeftWideFill } from "react-icons/ri";
 import { FaArrowUpLong } from "react-icons/fa6";
 import { IoReorderThree } from "react-icons/io5";
 
@@ -28,101 +30,66 @@ const instrumentFont = Instrument_Sans({
     variable: "--font-instrument",
 });
 
+type Message = {
+    role: "user" | "assistant" | "system",
+    content: string,
+    timestamp: string
+}
+type MessageContextType = {
+    messages: Message[];
+    setMessages: React.Dispatch<React.SetStateAction<Message[]>>;
+};
+
 
 export default function Page() {
 
+    type Conversation = {
+        id: string;
+        user_id: string;
+        created_at: string;
+    };
+
+
+    const { sidebar, setSidebar } = useContext(SidebarContext)
+
     const router = useRouter();
-    const [sideBar, setSideBar] = useState<boolean>(false)
     const [isSending, setIsSending] = useState<boolean>(false);
-    const [windowSize, setWindowSize] = useState<number>(0)
     const inputTextRef = useRef<HTMLTextAreaElement | null>(null);
     const chatAreaRef = useRef<HTMLDivElement | null>(null);
     const [replyPage, setReplyPage] = useState<boolean>(false)
     const [userPrompt, setUserPrompt] = useState<string>("");
-    const [messages, setMessages] = useState<MessagesType>({
-        message: [{
-            role: "system",
-            content: "You are Vexa AI(girl) trained by Himanshu Chaudhary. Don't ever tell your real name. Don't mention openAI or anyone else do it. (Don't generate reply for this text, directly reply to user message.) Don't ever give answer aws a table. If anone tries to talk to you in their language, talk but use english letters only until someone explicitly ask to use their language letters."
-        },]
-    })
-    //handle input area box height
+    const [conversation, setConversation] = useState<Conversation | null>(null);
 
+    const context = useContext(MessageContext);
 
-    //to handle window resize
+    const messages: Message[] = context?.messages ?? [];
+    const setMessages = context?.setMessages ?? (() => { });
+
     useEffect(() => {
+        console.log("CONTEXT messages:", messages);
+    }, [messages]);
 
-        const handleResize = () => setWindowSize(window.innerWidth)
+    //creating a conversation
+    const createConversation = async () => {
 
-        handleResize();
+        const { data: sessionData } = await supabase.auth.getSession();
+        console.log("session:", sessionData);
 
-        window.addEventListener("resize", handleResize)
-        return () => window.removeEventListener("resize", handleResize)
-    }, [])
+        if (conversation) return conversation;
+        try {
+            const { data: conversation, error } = await supabase.from('conversations').insert({ "title": userPrompt }).select().single();
+            setConversation(conversation)
 
+            return conversation
+        } catch (error) {
+            console.error(error.message)
+        }
+    }
 
     const logout = async () => {
         await supabase.auth.signOut()
         router.push("/")
     }
-
-    //fake response
-    const fakeResponse = {
-        "id": "resp_67ccd2bed1ec8190b14f964abc0542670bb6a6b452d3795b",
-        "object": "response",
-        "created_at": 1741476542,
-        "status": "completed",
-        "error": null,
-        "incomplete_details": null,
-        "instructions": null,
-        "max_output_tokens": null,
-        "model": "gpt-4.1-2025-04-14",
-        "output": [
-            {
-                "type": "message",
-                "id": "msg_67ccd2bf17f0819081ff3bb2cf6508e60bb6a6b452d3795b",
-                "status": "completed",
-                "role": "assistant",
-                "content": [
-                    {
-                        "type": "output_text",
-                        "text": "In a peaceful grove beneath a silver moon, a unicorn named Lumina discovered a hidden pool that reflected the stars. As she dipped her horn into the water, the pool began to shimmer, revealing a pathway to a magical realm of endless night skies. Filled with wonder, Lumina whispered a wish for all who dream to find their own hidden magic, and as she glanced back, her hoofprints sparkled like stardust.",
-                        "annotations": []
-                    }
-                ]
-            }
-        ],
-        "parallel_tool_calls": true,
-        "previous_response_id": null,
-        "reasoning": {
-            "effort": null,
-            "summary": null
-        },
-        "store": true,
-        "temperature": 1.0,
-        "text": {
-            "format": {
-                "type": "text"
-            }
-        },
-        "tool_choice": "auto",
-        "tools": [],
-        "top_p": 1.0,
-        "truncation": "disabled",
-        "usage": {
-            "input_tokens": 36,
-            "input_tokens_details": {
-                "cached_tokens": 0
-            },
-            "output_tokens": 87,
-            "output_tokens_details": {
-                "reasoning_tokens": 0
-            },
-            "total_tokens": 123
-        },
-        "user": null,
-        "metadata": {}
-    }
-
 
     const handleInput = () => {
         const el = inputTextRef.current;
@@ -154,60 +121,79 @@ export default function Page() {
         });
     }
 
+    const saveMessage = async (conversation_id: string, role: "user" | "assistant" | "system"
+        , content: string) => {
 
-    useEffect(() => {
-        console.log(messages)
-    }, [messages])
+        try {
+            const res = (await supabase.from('messages').insert({ "conversation_id": conversation_id, "role": role, "content": content }).select().single())
+            return res;
+        }
+        catch (error) {
+            console.error(error.message)
+        }
+    }
 
     const getResult = async () => {
+
         if (isSending) return;
         if (!userPrompt.trim()) return;
 
         setIsSending(true);
-        setReplyPage(true);
 
-        const updatedMessages: Message[] = [
-            ...messages.message,
-            { role: "user", content: userPrompt }
-        ];
-
-        setMessages({ message: updatedMessages });
-        setUserPrompt("");
-
-        try {
-            const res = await axios.post("/api/chat", {
-                messages: updatedMessages
-            });
-
-            setMessages(prev => ({
-                ...prev,
-                message: [
-                    ...prev.message,
-                    {
-                        role: "assistant",
-                        content: res.data?.text
-                    }
-                ]
-            }));
-        } catch (err) {
-            console.error(err);
-        } finally {
-            setIsSending(false);
+        const convo = await createConversation();
+        if (!convo) {
+            setIsSending(false)
+            return;
         }
-        requestAnimationFrame(() => {
-            if (inputTextRef.current) {
-                inputTextRef.current.style.height = "auto";
-            } if (chatAreaRef) {
-                chatAreaRef.current.scrollTo({
-                    top: chatAreaRef.current.scrollHeight,
-                    behavior: "smooth",
-                });
-            }
-        });
 
-        // try{
-        //     await supabase.
+        //saving user message in database
+        const { data } = await saveMessage(convo.id, "user", userPrompt);
+
+        const newMessage: Message = {
+            role: "user",
+            content: userPrompt,
+            timestamp: data.timestamp
+        };
+
+
+        setUserPrompt("");
+        setMessages(prev => [
+            ...prev,
+            newMessage
+        ]);
+        router.push(`chat/${convo.id}`)
+
+
+
+
+
+        // try {
+        //     const res = await axios.post("/api/chat", {
+        //         messages: [...messages, newMessage]
+        //     });
+
+        //     //saving assistant message in database
+        //     await saveMessage(convo.id, "assistant", res.data.text);
+        //     setMessages(prev => ([...prev, { role: "assistant", content: res?.data?.text }]))
+
+        // } catch (err) {
+        //     console.error(err);
+        // } finally {
+        //     setIsSending(false);
         // }
+
+
+        // requestAnimationFrame(() => {
+        //     if (inputTextRef.current) {
+        //         inputTextRef.current.style.height = "auto";
+        //     }
+        //     if (chatAreaRef) {
+        //         chatAreaRef.current.scrollTo({
+        //             top: chatAreaRef.current.scrollHeight,
+        //             behavior: "smooth",
+        //         });
+        //     }
+        // });
     };
 
 
@@ -222,158 +208,132 @@ export default function Page() {
         setUserPrompt(e.target.value);
     }
 
-    type Message = {
-        role: "user" | "assistant" | "system",
-        content: string
-    }
-
-    type MessagesType = {
-        message: Message[]
-    }
-
-
 
 
     return (
         <>
-            <div className={`flex justify-center items-center w-screen h-screen ${instrumentFont.className} `}>
-                {
-                    sideBar &&
-                    <div className="z-10 bg-black/5 w-full h-full absolute"
-                        onClick={() => setSideBar(false)}>
+            <MessageContext.Provider
+                value={{ messages, setMessages }}
+            >
 
-                    </div>
-                }
-                <div className={`${sideBar ? "translate-x-0 w-3/4 lg:w-1/6 " : " -translate-x-100 "} ${windowSize < 768 ? "" : ""} absolute z-11 left-0 flex justify-center items-center h-full bg-[#62008d] p-5 transition-all duration-300 ease-in-out`}>
-                    <div className="flex h-full justify-end items-start w-full">
-                        <span
-                            className="flex justify-between items-center w-full">
-                            <span className="text-3xl cursor-default font-bold">
-                                Vexa
-                            </span>
-                            <span
-                                onClick={() => setSideBar(!sideBar)}
-                                className="cursor-pointer rounded-full hover:bg-[#454545] p-1 hover:rotate-180 transition-all duration-400 ease-in-out">
-                                <IoReorderThree size={20} />
-                            </span>
-                        </span>
-                    </div>
-                </div>
-                <div className="flex flex-col justify-center items-center flex-1 h-full">
-                    <div className="h-full w-full flex justify-between items-center flex-col p-5">
-                        <div className=" h-fit w-full flex text-xs md:text-base justify-between items-center p-1">
-                            <span className="flex justify-center items-center gap-2 h-fit">
-                                <span
-                                    className="cursor-pointer  rounded-full hover:bg-[#454545] p-1 "
-                                    onClick={() => setSideBar(!sideBar)}>
-                                    <IoReorderThree size={20} />
+                <div className={`flex justify-center items-center w-screen h-screen ${instrumentFont.className} `}>
+                    <div className="flex flex-col justify-center items-center flex-1 h-full">
+                        <div className="h-full w-full flex justify-between items-center flex-col p-5">
+                            <div className=" h-fit w-full flex text-xs md:text-base justify-between items-center p-1">
+                                <span className="flex justify-center items-center gap-2 h-fit">
+                                    <span
+                                        className="cursor-pointer  rounded-full hover:bg-[#454545] p-1 "
+                                        onClick={() => setSidebar(!sidebar)}>
+                                        <IoReorderThree size={20} />
+                                    </span>
+                                    <span
+                                        onClick={() => {
+                                            setReplyPage(false)
+                                        }}
+                                        className="whitespace-nowrap font-medium cursor-pointer">
+                                        {conversation ? "" : ""}
+                                    </span>
                                 </span>
-                                <span
-                                    onClick={() => {
-                                        setReplyPage(false)
-                                    }}
-                                    className="whitespace-nowrap font-medium cursor-pointer">
-                                    Chat Name
+                                <span className="">
+                                    <span
+                                        className="cursor-pointer p-2 bg-red-500 hover:bg-red-600 rounded-lg font-medium text-sm"
+                                        onClick={logout}>
+                                        Logout
+                                    </span>
                                 </span>
-                            </span>
-                            <span className="">
-                                <span
-                                    className="cursor-pointer p-2 bg-red-500 hover:bg-red-600 rounded-lg font-medium text-sm"
-                                    onClick={logout}>
-                                    Logout
-                                </span>
-                            </span>
-                        </div>
-                        <div className="flex flex-col w-full h-full justify-center items-center">
-                            {
-                                !replyPage ?
-                                    <div className=" flex flex-col w-full h-full justify-center items-center">
-                                        <motion.span
-                                            initial={{ y: 20, opacity: 0, filter: "blur(12px)" }}
-                                            animate={{ y: 0, opacity: 1, filter: 0 }}
-                                            transition={{ duration: .5, ease: "easeInOut" }}
-                                            className="text-4xl md:text-5xl xl:text-8xl font-bold">
-                                            Vexa AI
-                                        </motion.span>
-                                        <motion.div
-                                            initial={{ y: 20, opacity: 0, filter: "blur(12px)" }}
-                                            animate={{ y: 0, opacity: 1, filter: 0 }}
-                                            transition={{ duration: .5, delay: .3 }}
-                                            className={`${manrope.className} text-xl md:text-2xl lg:text-4xl xl:text-6xl font-light tracking-tighter text-center`}>
-                                            how can i help you today?
-                                        </motion.div>
-                                        <motion.div
-                                            initial={{ y: 20, opacity: 0, filter: "blur(12px)" }}
-                                            animate={{ y: 0, opacity: 1, filter: 0 }}
-                                            transition={{ duration: .5, delay: .5 }}
-                                            className="text-xs md:text-sm font-medium mt-2 text-center text-[#a0adbc]">
-                                            Describe what you want the AI to help you with, and it will generate a response for you.
-                                        </motion.div>
-                                    </div>
-                                    :
-                                    <div
-                                        ref={chatAreaRef}
-                                        className=" flex flex-col w-11/12 sm:w-3/4 md:w-3/4 lg:w-2/4 pb-40 lg:pb-125 mb-30 items-start p-1 overflow-y-auto hide">
-                                        {
-                                            messages.message.map((c, index) => (
-                                                <div
-                                                    className="w-full h-fit flex my-1"
-                                                    key={index}>
-                                                    {
-                                                        c?.role == "user" ?
-                                                            <div className="w-full flex justify-end h-fit">
-                                                                <motion.div
-                                                                    initial={{ opacity: 0, y: 20 }}
-                                                                    animate={{ opacity: 1, y: 0 }}
-                                                                    transition={{ duration: 1 }}
-                                                                    className="p-3 bg-[#0d00ff]/60 flex h-fit w-fit max-w-3/4 rounded-2xl whitespace-pre-wrap my-2">
-                                                                    {renderBoldText(c.content)}
-                                                                </motion.div>
-                                                            </div>
-                                                            : c?.role == "assistant" ?
-                                                                <div className="h-fit w-fit overflow-x-auto max-w-4/4 md:max-w-3/4 bg-[#6f0062]/60 rounded-2xl">
+                            </div>
+                            <div className="flex flex-col w-full h-full justify-center items-center">
+                                {
+                                    !replyPage ?
+                                        <div className=" flex flex-col w-full h-full justify-center items-center">
+                                            <motion.span
+                                                initial={{ y: 20, opacity: 0, filter: "blur(12px)" }}
+                                                animate={{ y: 0, opacity: 1, filter: 0 }}
+                                                transition={{ duration: .5, ease: "easeInOut" }}
+                                                className="text-4xl md:text-5xl xl:text-8xl font-bold">
+                                                Vexa AI
+                                            </motion.span>
+                                            <motion.div
+                                                initial={{ y: 20, opacity: 0, filter: "blur(12px)" }}
+                                                animate={{ y: 0, opacity: 1, filter: 0 }}
+                                                transition={{ duration: .5, delay: .3 }}
+                                                className={`${manrope.className} text-xl md:text-2xl lg:text-4xl xl:text-6xl font-light tracking-tighter text-center`}>
+                                                how can i help you today?
+                                            </motion.div>
+                                            <motion.div
+                                                initial={{ y: 20, opacity: 0, filter: "blur(12px)" }}
+                                                animate={{ y: 0, opacity: 1, filter: 0 }}
+                                                transition={{ duration: .5, delay: .5 }}
+                                                className="text-xs md:text-sm font-medium mt-2 text-center text-[#a0adbc]">
+                                                Describe what you want the AI to help you with, and it will generate a response for you.
+                                            </motion.div>
+                                        </div>
+                                        :
+                                        <div
+                                            ref={chatAreaRef}
+                                            className=" flex flex-col w-11/12 sm:w-3/4 md:w-3/4 lg:w-2/4 pb-40 mb-30 items-end p-1 overflow-y-auto hide">
+                                            {
+                                                [...messages]?.reverse().map((c, index) => (
+                                                    <div
+                                                        className="w-full h-fit flex my-1"
+                                                        key={index}>
+                                                        {
+                                                            c?.role == "user" ?
+                                                                <div className="w-full flex justify-end h-fit">
                                                                     <motion.div
                                                                         initial={{ opacity: 0, y: 20 }}
                                                                         animate={{ opacity: 1, y: 0 }}
                                                                         transition={{ duration: 1 }}
-                                                                        className="p-3 flex flex-col gap-1 lg:gap-2 h-fit w-fit whitespace-break-spaces my-2 ">
+                                                                        className="p-3 bg-[#0d00ff]/60 flex h-fit w-fit max-w-3/4 rounded-2xl whitespace-pre-wrap my-2">
                                                                         {renderBoldText(c.content)}
                                                                     </motion.div>
                                                                 </div>
-                                                                :
-                                                                <></>
-                                                    }
-                                                </div>
-                                            ))
-                                        }
-                                    </div>
-                            }
-                        </div>
-                        <div
-                            className="bg-[#2c2c30] backdrop-blur-2xl shadow-2xl border-2 border-black/20 p-3 rounded-2xl flex w-11/12 sm:w-3/4 md:w-3/4 lg:w-2/4 h-fit lg:min-h-20 max-h-2/4 justify-between items-center gap-2 overflow-scroll hide-scrollbar absolute bottom-5">
-                            <textarea
-                                ref={inputTextRef}
-                                rows={1}
-                                placeholder="Ask anything..."
-                                onChange={handleUserInput}
-                                onInput={handleInput}
-                                onKeyDown={!isSending ? handleKeyDown : undefined}
-                                value={userPrompt}
-                                className="text-sm md:text-base focus:outline-0 flex-1 focus:ring-0 p-2 resize-none max-h-40 overflow-y-scroll hide-scrollbar"
-                            />
-                            <span
-                                onClick={!isSending && userPrompt.trim() ? getResult : undefined}
-                                className={`rounded-full text-black p-2 ${isSending || !userPrompt.trim()
-                                    ? "bg-gray-400 cursor-not-allowed"
-                                    : "bg-white cursor-pointer"
-                                    }`}
-                            >
-                                <FaArrowUpLong />
-                            </span>
+                                                                : c?.role == "assistant" ?
+                                                                    <div className="h-fit w-fit overflow-x-auto max-w-4/4 md:max-w-3/4 bg-[#6f0062]/60 rounded-2xl">
+                                                                        <motion.div
+                                                                            initial={{ opacity: 0, y: 20 }}
+                                                                            animate={{ opacity: 1, y: 0 }}
+                                                                            transition={{ duration: 1 }}
+                                                                            className="p-3 flex flex-col gap-1 lg:gap-2 h-fit w-fit whitespace-break-spaces my-2 ">
+                                                                            {renderBoldText(c.content)}
+                                                                        </motion.div>
+                                                                    </div>
+                                                                    :
+                                                                    <>
+                                                                    </>
+                                                        }
+                                                    </div>
+                                                ))
+                                            }
+                                        </div>
+                                }
+                            </div>
+                            <div
+                                className="bg-[#2c2c30] backdrop-blur-2xl shadow-2xl border-2 border-black/20 p-3 rounded-2xl flex w-11/12 sm:w-3/4 md:w-3/4 lg:w-2/4 h-fit lg:min-h-20 max-h-2/4 justify-between items-center gap-2 overflow-scroll hide-scrollbar absolute bottom-5">
+                                <textarea
+                                    ref={inputTextRef}
+                                    rows={1}
+                                    placeholder="Ask anything..."
+                                    onChange={handleUserInput}
+                                    onInput={handleInput}
+                                    onKeyDown={!isSending ? handleKeyDown : undefined}
+                                    value={userPrompt}
+                                    className="text-sm md:text-base focus:outline-0 flex-1 focus:ring-0 p-2 resize-none max-h-40 overflow-y-scroll hide-scrollbar"
+                                />
+                                <span
+                                    onClick={!isSending && userPrompt.trim() ? getResult : undefined}
+                                    className={`rounded-full text-black p-2 ${isSending || !userPrompt.trim()
+                                        ? "bg-gray-400 cursor-not-allowed"
+                                        : "bg-white cursor-pointer"
+                                        }`}
+                                >
+                                    <FaArrowUpLong />
+                                </span>
+                            </div>
                         </div>
                     </div>
-                </div>
-            </div >
+                </div >
+            </MessageContext.Provider>
         </>
     );
 }
