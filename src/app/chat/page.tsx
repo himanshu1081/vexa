@@ -133,7 +133,7 @@ export default function Page() {
         }
     }
 
-    const getResult = async () => {
+    const redirectPage = async () => {
 
         if (isSending) return;
         if (!userPrompt.trim()) return;
@@ -200,7 +200,7 @@ export default function Page() {
     const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
         if (e.key == 'Enter' && !e.shiftKey) {
             e.preventDefault()
-            getResult();
+            redirectPage();
         }
     }
 
@@ -212,128 +212,83 @@ export default function Page() {
 
     return (
         <>
-            <MessageContext.Provider
-                value={{ messages, setMessages }}
-            >
 
-                <div className={`flex justify-center items-center w-screen h-screen ${instrumentFont.className} `}>
-                    <div className="flex flex-col justify-center items-center flex-1 h-full">
-                        <div className="h-full w-full flex justify-between items-center flex-col p-5">
-                            <div className=" h-fit w-full flex text-xs md:text-base justify-between items-center p-1">
-                                <span className="flex justify-center items-center gap-2 h-fit">
-                                    <span
-                                        className="cursor-pointer  rounded-full hover:bg-[#454545] p-1 "
-                                        onClick={() => setSidebar(!sidebar)}>
-                                        <IoReorderThree size={20} />
-                                    </span>
-                                    <span
-                                        onClick={() => {
-                                            setReplyPage(false)
-                                        }}
-                                        className="whitespace-nowrap font-medium cursor-pointer">
-                                        {conversation ? "" : ""}
-                                    </span>
-                                </span>
-                                <span className="">
-                                    <span
-                                        className="cursor-pointer p-2 bg-red-500 hover:bg-red-600 rounded-lg font-medium text-sm"
-                                        onClick={logout}>
-                                        Logout
-                                    </span>
-                                </span>
-                            </div>
-                            <div className="flex flex-col w-full h-full justify-center items-center">
-                                {
-                                    !replyPage ?
-                                        <div className=" flex flex-col w-full h-full justify-center items-center">
-                                            <motion.span
-                                                initial={{ y: 20, opacity: 0, filter: "blur(12px)" }}
-                                                animate={{ y: 0, opacity: 1, filter: 0 }}
-                                                transition={{ duration: .5, ease: "easeInOut" }}
-                                                className="text-4xl md:text-5xl xl:text-8xl font-bold">
-                                                Vexa AI
-                                            </motion.span>
-                                            <motion.div
-                                                initial={{ y: 20, opacity: 0, filter: "blur(12px)" }}
-                                                animate={{ y: 0, opacity: 1, filter: 0 }}
-                                                transition={{ duration: .5, delay: .3 }}
-                                                className={`${manrope.className} text-xl md:text-2xl lg:text-4xl xl:text-6xl font-light tracking-tighter text-center`}>
-                                                how can i help you today?
-                                            </motion.div>
-                                            <motion.div
-                                                initial={{ y: 20, opacity: 0, filter: "blur(12px)" }}
-                                                animate={{ y: 0, opacity: 1, filter: 0 }}
-                                                transition={{ duration: .5, delay: .5 }}
-                                                className="text-xs md:text-sm font-medium mt-2 text-center text-[#a0adbc]">
-                                                Describe what you want the AI to help you with, and it will generate a response for you.
-                                            </motion.div>
-                                        </div>
-                                        :
-                                        <div
-                                            ref={chatAreaRef}
-                                            className=" flex flex-col w-11/12 sm:w-3/4 md:w-3/4 lg:w-2/4 pb-40 mb-30 items-end p-1 overflow-y-auto hide">
-                                            {
-                                                [...messages]?.reverse().map((c, index) => (
-                                                    <div
-                                                        className="w-full h-fit flex my-1"
-                                                        key={index}>
-                                                        {
-                                                            c?.role == "user" ?
-                                                                <div className="w-full flex justify-end h-fit">
-                                                                    <motion.div
-                                                                        initial={{ opacity: 0, y: 20 }}
-                                                                        animate={{ opacity: 1, y: 0 }}
-                                                                        transition={{ duration: 1 }}
-                                                                        className="p-3 bg-[#0d00ff]/60 flex h-fit w-fit max-w-3/4 rounded-2xl whitespace-pre-wrap my-2">
-                                                                        {renderBoldText(c.content)}
-                                                                    </motion.div>
-                                                                </div>
-                                                                : c?.role == "assistant" ?
-                                                                    <div className="h-fit w-fit overflow-x-auto max-w-4/4 md:max-w-3/4 bg-[#6f0062]/60 rounded-2xl">
-                                                                        <motion.div
-                                                                            initial={{ opacity: 0, y: 20 }}
-                                                                            animate={{ opacity: 1, y: 0 }}
-                                                                            transition={{ duration: 1 }}
-                                                                            className="p-3 flex flex-col gap-1 lg:gap-2 h-fit w-fit whitespace-break-spaces my-2 ">
-                                                                            {renderBoldText(c.content)}
-                                                                        </motion.div>
-                                                                    </div>
-                                                                    :
-                                                                    <>
-                                                                    </>
-                                                        }
-                                                    </div>
-                                                ))
-                                            }
-                                        </div>
-                                }
-                            </div>
-                            <div
-                                className="bg-[#2c2c30] backdrop-blur-2xl shadow-2xl border-2 border-black/20 p-3 rounded-2xl flex w-11/12 sm:w-3/4 md:w-3/4 lg:w-2/4 h-fit lg:min-h-20 max-h-2/4 justify-between items-center gap-2 overflow-scroll hide-scrollbar absolute bottom-5">
-                                <textarea
-                                    ref={inputTextRef}
-                                    rows={1}
-                                    placeholder="Ask anything..."
-                                    onChange={handleUserInput}
-                                    onInput={handleInput}
-                                    onKeyDown={!isSending ? handleKeyDown : undefined}
-                                    value={userPrompt}
-                                    className="text-sm md:text-base focus:outline-0 flex-1 focus:ring-0 p-2 resize-none max-h-40 overflow-y-scroll hide-scrollbar"
-                                />
+            <div className={`flex justify-center items-center w-screen h-screen ${instrumentFont.className} `}>
+                <div className="flex flex-col justify-center items-center flex-1 h-full">
+                    <div className="h-full w-full flex justify-between items-center flex-col p-5">
+                        <div className=" h-fit w-full flex text-xs md:text-base justify-between items-center p-1">
+                            <span className="flex justify-center items-center gap-2 h-fit">
                                 <span
-                                    onClick={!isSending && userPrompt.trim() ? getResult : undefined}
-                                    className={`rounded-full text-black p-2 ${isSending || !userPrompt.trim()
-                                        ? "bg-gray-400 cursor-not-allowed"
-                                        : "bg-white cursor-pointer"
-                                        }`}
-                                >
-                                    <FaArrowUpLong />
+                                    className="cursor-pointer  rounded-full hover:bg-[#454545] p-1 "
+                                    onClick={() => setSidebar(!sidebar)}>
+                                    <IoReorderThree size={20} />
                                 </span>
+                                <span
+                                    onClick={() => {
+                                        setReplyPage(false)
+                                    }}
+                                    className="whitespace-nowrap font-medium cursor-pointer">
+                                    {conversation ? "" : ""}
+                                </span>
+                            </span>
+                            <span className="">
+                                <span
+                                    className="cursor-pointer p-2 bg-red-500 hover:bg-red-600 rounded-lg font-medium text-sm"
+                                    onClick={logout}>
+                                    Logout
+                                </span>
+                            </span>
+                        </div>
+                        <div className="flex flex-col w-full h-full justify-center items-center">
+                            <div className=" flex flex-col w-full h-full justify-center items-center">
+                                <motion.span
+                                    initial={{ y: 20, opacity: 0, filter: "blur(12px)" }}
+                                    animate={{ y: 0, opacity: 1, filter: 0 }}
+                                    transition={{ duration: .5, ease: "easeInOut" }}
+                                    className="text-4xl md:text-5xl xl:text-8xl font-bold">
+                                    Vexa AI
+                                </motion.span>
+                                <motion.div
+                                    initial={{ y: 20, opacity: 0, filter: "blur(12px)" }}
+                                    animate={{ y: 0, opacity: 1, filter: 0 }}
+                                    transition={{ duration: .5, delay: .3 }}
+                                    className={`${manrope.className} text-xl md:text-2xl lg:text-4xl xl:text-6xl font-light tracking-tighter text-center`}>
+                                    how can i help you today?
+                                </motion.div>
+                                <motion.div
+                                    initial={{ y: 20, opacity: 0, filter: "blur(12px)" }}
+                                    animate={{ y: 0, opacity: 1, filter: 0 }}
+                                    transition={{ duration: .5, delay: .5 }}
+                                    className="text-xs md:text-sm font-medium mt-2 text-center text-[#a0adbc]">
+                                    Describe what you want the AI to help you with, and it will generate a response for you.
+                                </motion.div>
                             </div>
                         </div>
+                        <div
+                            className="bg-[#2c2c30] backdrop-blur-2xl shadow-2xl border-2 border-black/20 p-3 rounded-2xl flex w-11/12 sm:w-3/4 md:w-3/4 lg:w-2/4 h-fit lg:min-h-20 max-h-2/4 justify-between items-center gap-2 overflow-scroll hide-scrollbar absolute bottom-5">
+                            <textarea
+                                ref={inputTextRef}
+                                rows={1}
+                                placeholder="Ask anything..."
+                                onChange={handleUserInput}
+                                onInput={handleInput}
+                                onKeyDown={!isSending ? handleKeyDown : undefined}
+                                value={userPrompt}
+                                className="text-sm md:text-base focus:outline-0 flex-1 focus:ring-0 p-2 resize-none max-h-40 overflow-y-scroll hide-scrollbar"
+                            />
+                            <span
+                                onClick={!isSending && userPrompt.trim() ? redirectPage : undefined}
+                                className={`rounded-full text-black p-2 ${isSending || !userPrompt.trim()
+                                    ? "bg-gray-400 cursor-not-allowed"
+                                    : "bg-white cursor-pointer"
+                                    }`}
+                            >
+                                <FaArrowUpLong />
+                            </span>
+                        </div>
                     </div>
-                </div >
-            </MessageContext.Provider>
+                </div>
+            </div >
         </>
     );
 }

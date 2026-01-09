@@ -167,41 +167,16 @@ export default function Page() {
         }
     }
 
-    const getReply = async () => {
+    const getReply = () => {
         if (isSending) return;
         if (!userPrompt.trim()) return;
 
         setIsSending(true);
-        //saving user message in database
-        const { data } = await saveMessage(chatid, "user", userPrompt);
 
-        const updatedMessages: Message =
-            { role: "user", content: userPrompt, timestamp: data.timestamp }
+        handleUserReply();
 
-        setMessages(prev => [...prev, updatedMessages]);
-        setUserPrompt("");
+        handleAiReply();
 
-        try {
-            const res = await axios.post("/api/chat", {
-                messages: updatedMessages
-            });
-            console.log(res)
-
-            //saving assistant message in database
-            const { data } = await saveMessage(chatid!, "assistant", res.data.text);
-            setMessages(prev => [...prev, {
-                role: "assistant",
-                content: res.data?.text,
-                timestamp: data?.timestamp
-            }]
-
-            );
-
-        } catch (err) {
-            console.error(err);
-        } finally {
-            setIsSending(false);
-        }
         requestAnimationFrame(() => {
             if (inputTextRef.current) {
                 inputTextRef.current.style.height = "auto";
@@ -215,6 +190,42 @@ export default function Page() {
         });
     };
 
+    const handleUserReply = async () => {
+        const { data } = await saveMessage(chatid, "user", userPrompt);
+
+        const updatedMessages: Message =
+            { role: "user", content: userPrompt, timestamp: data.timestamp }
+
+        setMessages(prev => [...prev, updatedMessages]);
+        setUserPrompt("");
+
+    }
+
+    const handleAiReply = async () => {
+        try {
+            const res = await axios.post("/api/chat", {
+                messages: [...messages, { role: "user", content: userPrompt }].map((m) => (
+                    {
+                        role: m.role,
+                        content: m.content
+                    }
+                ))
+            });
+            console.log(res)
+
+            //saving assistant message in database
+            const { data } = await saveMessage(chatid!, "assistant", res.data.text);
+            setMessages(prev => [...prev, {
+                role: "assistant",
+                content: res.data?.text,
+                timestamp: data?.timestamp
+            }]);
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setIsSending(false);
+        }
+    }
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
         if (e.key == 'Enter' && !e.shiftKey) {
