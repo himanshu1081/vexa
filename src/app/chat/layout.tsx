@@ -32,21 +32,10 @@ type ChatHistoryContextType = {
     setChatHistory: React.Dispatch<React.SetStateAction<ChatHistory[]>>;
 }
 
-type Message = {
-    role: "user" | "assistant" | "system",
-    content: string,
-    timestamp: string
-}
-type MessageContextType = {
-    messages: Message[];
-    setMessages: React.Dispatch<React.SetStateAction<Message[]>>;
-};
 
 export const SidebarContext = createContext<SidebarContextType | null>(null);
 
 export const chatHistoryContext = createContext<ChatHistoryContextType | null>(null);
-
-export const MessageContext = createContext<MessageContextType>(null)
 
 
 export default function MainLayout({
@@ -61,24 +50,6 @@ export default function MainLayout({
     const [sidebar, setSidebar] = useState<boolean>(false)
     const [chatHistory, setChatHistory] = useState<ChatHistory[]>([])
     const [windowSize, setWindowSize] = useState<number>(0)
-
-    const date = new Date()
-    const SYSTEM_MESSAGE: Message = {
-        role: "system",
-        content: `You are Vexa AI (girl) trained by Himanshu Chaudhary.
-Don't ever tell your real name.
-Don't mention OpenAI or anyone else.
-Don't generate a reply to this system message.
-Don't ever answer in a table.
-If a user speaks another language, reply using English letters only unless explicitly asked.`,
-        timestamp: date.toString()
-    };
-
-
-
-    const [messages, setMessages] = useState<Message[]>([
-        SYSTEM_MESSAGE,
-    ]);
 
     const session = async () => {
         const res = await supabase.auth.getSession()
@@ -123,7 +94,6 @@ If a user speaks another language, reply using English letters only unless expli
 
     return (
         <>
-            <MessageContext.Provider value={{ messages, setMessages }}>
                 <SidebarContext.Provider value={{ sidebar, setSidebar }}>
                     <chatHistoryContext.Provider value={{ chatHistory, setChatHistory }}>
 
@@ -153,7 +123,7 @@ If a user speaks another language, reply using English letters only unless expli
                                             <div className="flex flex-col justify-center items-start w-full gap-1">
                                                 {
                                                     chatHistory?.map((c, index) => (
-                                                        <div className="hover:bg-[#270238] cursor-pointer rounded-md w-55 h-8 p-3 flex justify-start items-center truncate"
+                                                        <div className="hover:bg-[#270238] cursor-pointer rounded-md w-55 h-8 p-4 flex justify-start items-center truncate"
                                                             key={c.id}
                                                             onClick={() => router.push(`/chat/${c.id}`)}>
                                                             {c.title}
@@ -184,7 +154,6 @@ If a user speaks another language, reply using English letters only unless expli
                         </div>
                     </chatHistoryContext.Provider>
                 </SidebarContext.Provider>
-            </MessageContext.Provider>
         </>
     );
 }

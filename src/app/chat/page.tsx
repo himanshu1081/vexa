@@ -5,10 +5,7 @@ import { useState, createContext, useRef, ChangeEvent, useContext, useEffect } f
 import { supabase } from "../lib/supabase";
 import { useRouter } from "next/navigation";
 import { motion } from "motion/react"
-import axios from "axios";
-import { MessageContext } from "./layout";
 import { SidebarContext } from "./layout";
-import { useParams } from "next/navigation";
 
 //icons
 import { FaArrowUpLong } from "react-icons/fa6";
@@ -53,21 +50,11 @@ export default function Page() {
     const { sidebar, setSidebar } = useContext(SidebarContext)
 
     const router = useRouter();
+    const chatAreaRef = useRef<HTMLDivElement | null>(null);
     const [isSending, setIsSending] = useState<boolean>(false);
     const inputTextRef = useRef<HTMLTextAreaElement | null>(null);
-    const chatAreaRef = useRef<HTMLDivElement | null>(null);
-    const [replyPage, setReplyPage] = useState<boolean>(false)
     const [userPrompt, setUserPrompt] = useState<string>("");
     const [conversation, setConversation] = useState<Conversation | null>(null);
-
-    const context = useContext(MessageContext);
-
-    const messages: Message[] = context?.messages ?? [];
-    const setMessages = context?.setMessages ?? (() => { });
-
-    useEffect(() => {
-        console.log("CONTEXT messages:", messages);
-    }, [messages]);
 
     //creating a conversation
     const createConversation = async () => {
@@ -99,40 +86,6 @@ export default function Page() {
         el.style.height = el.scrollHeight + "px"; // grow
     };
 
-    function renderBoldText(text: string) {
-        // Step 1: split text by new lines
-        const lines = text.split("\n");
-
-        return lines.map((line, lineIndex) => {
-            // Step 2: split each line by *** ***
-            const parts = line.split(/\*\*(.*?)\*\*/g);
-
-            return (
-                <div key={lineIndex}>
-                    {parts.map((part, partIndex) =>
-                        partIndex % 2 === 1 ? (
-                            <strong key={partIndex}>{part}</strong>
-                        ) : (
-                            part
-                        )
-                    )}
-                </div>
-            );
-        });
-    }
-
-    const saveMessage = async (conversation_id: string, role: "user" | "assistant" | "system"
-        , content: string) => {
-
-        try {
-            const res = (await supabase.from('messages').insert({ "conversation_id": conversation_id, "role": role, "content": content }).select().single())
-            return res;
-        }
-        catch (error) {
-            console.error(error.message)
-        }
-    }
-
     const redirectPage = async () => {
 
         if (isSending) return;
@@ -145,55 +98,10 @@ export default function Page() {
             setIsSending(false)
             return;
         }
+        router.push(`chat/${convo.id}?q=${encodeURIComponent(userPrompt)}`)
 
         //saving user message in database
-        const { data } = await saveMessage(convo.id, "user", userPrompt);
-
-        const newMessage: Message = {
-            role: "user",
-            content: userPrompt,
-            timestamp: data.timestamp
-        };
-
-
-        setUserPrompt("");
-        setMessages(prev => [
-            ...prev,
-            newMessage
-        ]);
-        router.push(`chat/${convo.id}`)
-
-
-
-
-
-        // try {
-        //     const res = await axios.post("/api/chat", {
-        //         messages: [...messages, newMessage]
-        //     });
-
-        //     //saving assistant message in database
-        //     await saveMessage(convo.id, "assistant", res.data.text);
-        //     setMessages(prev => ([...prev, { role: "assistant", content: res?.data?.text }]))
-
-        // } catch (err) {
-        //     console.error(err);
-        // } finally {
-        //     setIsSending(false);
-        // }
-
-
-        // requestAnimationFrame(() => {
-        //     if (inputTextRef.current) {
-        //         inputTextRef.current.style.height = "auto";
-        //     }
-        //     if (chatAreaRef) {
-        //         chatAreaRef.current.scrollTo({
-        //             top: chatAreaRef.current.scrollHeight,
-        //             behavior: "smooth",
-        //         });
-        //     }
-        // });
+       
     };
 
 
@@ -208,8 +116,6 @@ export default function Page() {
         setUserPrompt(e.target.value);
     }
 
-
-
     return (
         <>
 
@@ -222,13 +128,6 @@ export default function Page() {
                                     className="cursor-pointer  rounded-full hover:bg-[#454545] p-1 "
                                     onClick={() => setSidebar(!sidebar)}>
                                     <IoReorderThree size={20} />
-                                </span>
-                                <span
-                                    onClick={() => {
-                                        setReplyPage(false)
-                                    }}
-                                    className="whitespace-nowrap font-medium cursor-pointer">
-                                    {conversation ? "" : ""}
                                 </span>
                             </span>
                             <span className="">

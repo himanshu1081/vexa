@@ -5,9 +5,8 @@ import { useState, useRef, ChangeEvent, useContext, useEffect } from "react";
 import { supabase } from "../../lib/supabase";
 import { useRouter } from "next/navigation";
 import { motion } from "motion/react"
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { SidebarContext } from "../layout";
-import { MessageContext } from "../layout";
 import axios from "axios";
 
 
@@ -30,6 +29,7 @@ const instrumentFont = Instrument_Sans({
     weight: ["400", "500", "600", "700"],
     variable: "--font-instrument",
 });
+
 
 
 export default function Page() {
@@ -64,6 +64,8 @@ export default function Page() {
 
 
     const router = useRouter();
+    const param = useSearchParams();
+    const q = param.get('q')
     const [isSending, setIsSending] = useState<boolean>(false);
     const [windowSize, setWindowSize] = useState<number>(0)
     const inputTextRef = useRef<HTMLTextAreaElement | null>(null);
@@ -71,18 +73,24 @@ export default function Page() {
     const [userPrompt, setUserPrompt] = useState<string>("");
     const { sidebar, setSidebar } = useContext(SidebarContext)
     const { chatid } = useParams() as { chatid?: string };
+    const date = new Date()
 
-    // const [messages, setMessages] = useState<MessagesType>({
-    //     message: [{
-    //         role: "system",
-    //         content: "You are Vexa AI(girl) trained by Himanshu Chaudhary. Don't ever tell your real name. Don't mention openAI or anyone else do it. (Don't generate reply for this text, directly reply to user message.) Don't ever give answer aws a table. If anone tries to talk to you in their language, talk but use english letters only until someone explicitly ask to use their language letters."
-    //     },]
-    // })
+    const SYSTEM_MESSAGE: Message = {
+        role: "system",
+        content: `You are Vexa AI (girl) trained by Himanshu Chaudhary.
+    Don't ever tell your real name.
+    Don't mention OpenAI or anyone else.
+    Don't generate a reply to this system message.
+    Don't ever answer in a table.
+    If a user speaks another language, reply using English letters only unless explicitly asked.`,
+        timestamp: date.toString()
+    };
 
-    const context = useContext(MessageContext);
 
-    const messages: Message[] = context?.messages ?? [];
-    const setMessages = context?.setMessages ?? (() => { });
+
+    const [messages, setMessages] = useState<Message[]>([
+        SYSTEM_MESSAGE,
+    ]);
 
     //to handle window resize
     useEffect(() => {
@@ -96,12 +104,25 @@ export default function Page() {
     }, [])
 
     useEffect(() => {
-        console.log("Messages=>", messages)
+        requestAnimationFrame(() => {
+            if (inputTextRef.current) {
+                inputTextRef.current.style.height = "auto";
+            }
+            if (chatAreaRef) {
+                chatAreaRef.current.scrollTo({
+                    top: chatAreaRef.current.scrollHeight,
+                    behavior: "smooth",
+                });
+            }
+        });
     }, [messages])
+
+
 
 
     useEffect(() => {
         if (!chatid) return;
+        if (q) return;
 
         const getMessages = async () => {
             const { data } = await supabase
@@ -111,7 +132,7 @@ export default function Page() {
                 .order("timestamp", { ascending: true });;
 
             console.log(data);
-            setMessages(data)
+            setMessages(prev => [...prev, ...data]);
             return data
         };
 
@@ -167,30 +188,76 @@ export default function Page() {
         }
     }
 
+    useEffect(() => {
+        if (!q || !chatid) return;
+        console.log("Reached")
+
+        let cancelled = false;
+
+        const run = async () => {
+            const { data } = await saveMessage(chatid, "user", q);
+
+            if (cancelled) return;
+
+            const userMsg: Message = {
+                role: "user",
+                content: q,
+                timestamp: data.timestamp,
+            };
+
+            setMessages(prev => [...prev, userMsg]);
+
+            const snapshot = [...messages, userMsg];
+
+            const res = await axios.post("/api/chat", {
+                messages: snapshot.map(m => ({
+                    role: m.role,
+                    content: m.content,
+                })),
+            });
+
+            if (cancelled) return;
+
+
+            const { data: aiData } = await saveMessage(
+                chatid,
+                "assistant",
+                res.data.text
+            );
+
+            setMessages(prev => [
+                ...prev,
+                {
+                    role: "assistant",
+                    content: res.data.text,
+                    timestamp: aiData.timestamp,
+                },
+            ]);
+
+            router.replace(`/chat/${chatid}`);
+        };
+
+        run();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [q, chatid]);
+
     const getReply = () => {
         if (isSending) return;
         if (!userPrompt.trim()) return;
 
         setIsSending(true);
 
-        handleUserReply();
+        handleUserMessage();
 
         handleAiReply();
 
-        requestAnimationFrame(() => {
-            if (inputTextRef.current) {
-                inputTextRef.current.style.height = "auto";
-            }
-            if (chatAreaRef) {
-                chatAreaRef.current.scrollTo({
-                    top: chatAreaRef.current.scrollHeight,
-                    behavior: "smooth",
-                });
-            }
-        });
+
     };
 
-    const handleUserReply = async () => {
+    const handleUserMessage = async () => {
         const { data } = await saveMessage(chatid, "user", userPrompt);
 
         const updatedMessages: Message =
@@ -270,7 +337,7 @@ export default function Page() {
                         </div>
                         <div
                             ref={chatAreaRef}
-                            className=" flex flex-col w-11/12 sm:w-3/4 md:w-3/4 lg:w-2/4 pb-40 mb-30 items-end p-1 overflow-y-auto hide">
+                            className=" flex flex-col w-11/12 sm:w-3/4 md:w-3/4 lg:w-2/4 pb-40 mb-20 items-end p-1 overflow-y-auto hide">
                             {
                                 [...messages]?.map((c, index) => (
                                     <div
@@ -283,12 +350,12 @@ export default function Page() {
                                                         initial={{ opacity: 0, y: 20 }}
                                                         animate={{ opacity: 1, y: 0 }}
                                                         transition={{ duration: 1 }}
-                                                        className="p-3 bg-[#0d00ff]/60 flex h-fit w-fit max-w-3/4 rounded-2xl whitespace-pre-wrap my-2">
+                                                        className="p-3 bg-[#0d00ff]/60 h-fit w-fit max-w-3/4 rounded-2xl hide-scrollbar whitespace-pre-wrap my-2">
                                                         {renderBoldText(c.content)}
                                                     </motion.div>
                                                 </div>
                                                 : c?.role == "assistant" ?
-                                                    <div className="h-fit w-fit overflow-x-auto max-w-4/4 md:max-w-3/4 bg-[#6f0062]/60 rounded-2xl">
+                                                    <div className="h-fit w-fit overflow-x-auto hide-scrollbar max-w-4/4 md:max-w-3/4 bg-[#6f0062]/60 rounded-2xl">
                                                         <motion.div
                                                             initial={{ opacity: 0, y: 20 }}
                                                             animate={{ opacity: 1, y: 0 }}
