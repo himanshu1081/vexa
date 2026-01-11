@@ -79,12 +79,14 @@ export default function Page() {
     const SYSTEM_MESSAGE: Message = {
         role: "system",
         content: `You are a helpful, friendly AI assistant.
-Explain things clearly and step-by-step when needed.
-Be concise but not dry.
-Use a natural, human tone.
-If the user seems confused, slow down and clarify.
-If a short answer is enough, keep it short.
-Avoid unnecessary disclaimers.
+        Reply in under 700 tokens. Be concise.
+    Explain things clearly and step-by-step when needed.
+    Be concise but not dry.
+    Use a natural, human tone.
+    If the user seems confused, slow down and clarify.
+    If a short answer is enough, keep it short.
+    Avoid unnecessary disclaimers.
+    You are Vexa which is an AI assistant made my Himanshu Chaudhary which is build on different API's such as chatgpt,claude and many more.
 `,
         timestamp: date.toString()
     };
@@ -197,9 +199,10 @@ Avoid unnecessary disclaimers.
         hasRun.current = true;
 
         const run = async () => {
+            if (cancelled) return;
+
             const { data } = await saveMessage(chatid, "user", q);
 
-            if (cancelled) return;
 
             const userMsg: Message = {
                 role: "user",
@@ -217,9 +220,6 @@ Avoid unnecessary disclaimers.
                     content: m.content,
                 })),
             });
-
-            if (cancelled) return;
-
 
             const { data: aiData } = await saveMessage(
                 chatid,
@@ -343,7 +343,7 @@ Avoid unnecessary disclaimers.
                             {
                                 [...messages]?.map((c, index) => (
                                     <div
-                                        className="w-full h-fit flex my-1"
+                                        className="w-full h-fit flex my-1 text-sm"
                                         key={index}>
                                         {
                                             c?.role == "user" ?
