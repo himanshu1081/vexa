@@ -6,6 +6,7 @@ import { supabase } from "../lib/supabase";
 import { useRouter } from "next/navigation";
 import { motion } from "motion/react"
 import { SidebarContext } from "./layout";
+import { chatHistoryContext } from "./layout";
 
 //icons
 import { FaArrowUpLong } from "react-icons/fa6";
@@ -46,7 +47,7 @@ export default function Page() {
         created_at: string;
     };
 
-
+    const { chatHistory, setChatHistory } = useContext(chatHistoryContext)
     const { sidebar, setSidebar } = useContext(SidebarContext)
 
     const router = useRouter();
@@ -57,6 +58,13 @@ export default function Page() {
     const [conversation, setConversation] = useState<Conversation | null>(null);
 
     //creating a conversation
+
+    //     {
+    //     "id": "d6b4630b-6956-4c44-8831-5dde615b1d43",
+    //     "user_id": "1ebed8d3-9dca-4e6e-826a-7317d9ccbdf3",
+    //     "created_at": "2026-01-10T21:57:52.650091+00:00",
+    //     "title": "hi"
+    // }
     const createConversation = async () => {
 
         const { data: sessionData } = await supabase.auth.getSession();
@@ -65,8 +73,14 @@ export default function Page() {
         if (conversation) return conversation;
         try {
             const { data: conversation, error } = await supabase.from('conversations').insert({ "title": userPrompt }).select().single();
+            console.log("Conversation: ", conversation)
             setConversation(conversation)
-
+            setChatHistory(prev => ([{
+                id: conversation.id,
+                user_id: conversation.user_id,
+                title: conversation.title,
+                created_at: conversation.created_at,
+            }, ...prev]))
             return conversation
         } catch (error) {
             console.error(error.message)
@@ -101,7 +115,7 @@ export default function Page() {
         router.push(`chat/${convo.id}?q=${encodeURIComponent(userPrompt)}`)
 
         //saving user message in database
-       
+
     };
 
 
@@ -130,7 +144,7 @@ export default function Page() {
                                     <IoReorderThree size={20} />
                                 </span>
                             </span>
-                            <span className="">
+                            <span>
                                 <span
                                     className="cursor-pointer p-2 bg-red-500 hover:bg-red-600 rounded-lg font-medium text-sm"
                                     onClick={logout}>

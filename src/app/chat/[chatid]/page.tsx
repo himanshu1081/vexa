@@ -73,16 +73,19 @@ export default function Page() {
     const [userPrompt, setUserPrompt] = useState<string>("");
     const { sidebar, setSidebar } = useContext(SidebarContext)
     const { chatid } = useParams() as { chatid?: string };
+    const hasRun = useRef(false)
     const date = new Date()
 
     const SYSTEM_MESSAGE: Message = {
         role: "system",
-        content: `You are Vexa AI (girl) trained by Himanshu Chaudhary.
-    Don't ever tell your real name.
-    Don't mention OpenAI or anyone else.
-    Don't generate a reply to this system message.
-    Don't ever answer in a table.
-    If a user speaks another language, reply using English letters only unless explicitly asked.`,
+        content: `You are a helpful, friendly AI assistant.
+Explain things clearly and step-by-step when needed.
+Be concise but not dry.
+Use a natural, human tone.
+If the user seems confused, slow down and clarify.
+If a short answer is enough, keep it short.
+Avoid unnecessary disclaimers.
+`,
         timestamp: date.toString()
     };
 
@@ -115,30 +118,28 @@ export default function Page() {
                 });
             }
         });
+        console.log("Messages:", messages)
     }, [messages])
-
 
 
 
     useEffect(() => {
         if (!chatid) return;
-        if (q) return;
+        if (q) return; // skip when first-message flow
 
         const getMessages = async () => {
             const { data } = await supabase
                 .from("messages")
-                .select("role, content,timestamp")
+                .select("role, content, timestamp")
                 .eq("conversation_id", chatid)
-                .order("timestamp", { ascending: true });;
+                .order("timestamp", { ascending: true });
 
-            console.log(data);
-            setMessages(prev => [...prev, ...data]);
-            return data
+            setMessages([SYSTEM_MESSAGE, ...(data ?? [])]);
         };
 
         getMessages();
-
     }, [chatid]);
+
 
 
     const logout = async () => {
@@ -190,9 +191,10 @@ export default function Page() {
 
     useEffect(() => {
         if (!q || !chatid) return;
-        console.log("Reached")
 
         let cancelled = false;
+        if (hasRun.current) return;
+        hasRun.current = true;
 
         const run = async () => {
             const { data } = await saveMessage(chatid, "user", q);
@@ -207,7 +209,7 @@ export default function Page() {
 
             setMessages(prev => [...prev, userMsg]);
 
-            const snapshot = [...messages, userMsg];
+            const snapshot = [SYSTEM_MESSAGE, userMsg];
 
             const res = await axios.post("/api/chat", {
                 messages: snapshot.map(m => ({
@@ -312,7 +314,7 @@ export default function Page() {
             <div className={`flex justify-center items-center w-screen h-screen ${instrumentFont.className} `}>
                 <div className="flex flex-col justify-center items-center flex-1 h-full">
                     <div className="h-full w-full flex justify-between items-center flex-col p-5">
-                        <div className=" h-fit w-full flex text-xs md:text-base justify-between items-center p-1">
+                        <div className="h-fit w-full flex text-xs md:text-base justify-between items-start p-1">
                             <span className="flex justify-center items-center gap-2 h-fit">
                                 <span
                                     className="cursor-pointer  rounded-full hover:bg-[#454545] p-1 "
@@ -323,7 +325,7 @@ export default function Page() {
                                     onClick={() => {
                                         router.push('/chat')
                                     }}
-                                    className="whitespace-nowrap font-medium cursor-pointer">
+                                    className="whitespace-nowrap font-medium cursor-pointer bg-gray-200 hover:bg-gray-300 text-black text-sm py-1 px-2 rounded-lg">
                                     New Chat
                                 </span>
                             </span>
@@ -337,7 +339,7 @@ export default function Page() {
                         </div>
                         <div
                             ref={chatAreaRef}
-                            className=" flex flex-col w-11/12 sm:w-3/4 md:w-3/4 lg:w-2/4 pb-40 mb-20 items-end p-1 overflow-y-auto hide">
+                            className=" flex flex-col w-11/12 sm:w-3/4 md:w-3/4 lg:w-2/4 pb-40 mb-16 md:mb-17 lg:mb-20 xl:mb-21 items-end p-1 overflow-y-auto hide">
                             {
                                 [...messages]?.map((c, index) => (
                                     <div
@@ -350,17 +352,17 @@ export default function Page() {
                                                         initial={{ opacity: 0, y: 20 }}
                                                         animate={{ opacity: 1, y: 0 }}
                                                         transition={{ duration: 1 }}
-                                                        className="p-3 bg-[#0d00ff]/60 h-fit w-fit max-w-3/4 rounded-2xl hide-scrollbar whitespace-pre-wrap my-2">
+                                                        className="px-3 py-1 bg-[#3f004a] h-fit w-fit max-w-3/4 rounded-lg hide-scrollbar whitespace-pre-wrap my-2">
                                                         {renderBoldText(c.content)}
                                                     </motion.div>
                                                 </div>
                                                 : c?.role == "assistant" ?
-                                                    <div className="h-fit w-fit overflow-x-auto hide-scrollbar max-w-4/4 md:max-w-3/4 bg-[#6f0062]/60 rounded-2xl">
+                                                    <div className="h-fit w-fit overflow-x-auto hide-scrollbar max-w-4/4 md:max-w-3/4 bg-[#6f0062]/60 rounded-lg my-2">
                                                         <motion.div
                                                             initial={{ opacity: 0, y: 20 }}
                                                             animate={{ opacity: 1, y: 0 }}
                                                             transition={{ duration: 1 }}
-                                                            className="p-3 flex flex-col gap-1 lg:gap-2 h-fit w-fit whitespace-break-spaces my-2 ">
+                                                            className="px-3 py-1  flex flex-col gap-1 lg:gap-2 h-fit w-fit whitespace-break-spaces my-2 ">
                                                             {renderBoldText(c.content)}
                                                         </motion.div>
                                                     </div>
