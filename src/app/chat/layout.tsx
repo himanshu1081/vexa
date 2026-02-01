@@ -9,6 +9,9 @@ import { Inter, Instrument_Sans } from "next/font/google";
 //icons
 import { IoReorderThree } from "react-icons/io5";
 import { HiOutlinePencilSquare } from "react-icons/hi2";
+import { BsThreeDots } from "react-icons/bs";
+import { RiDeleteBin6Line } from "react-icons/ri";
+import HistoryList from "../../components/HistoryList";
 
 const inter = Inter({
     subsets: ["latin"],
@@ -46,14 +49,18 @@ export default function MainLayout({
 
     const router = useRouter();
 
-
+    const [options, setOptions] = useState<boolean>(false)
     const [sidebar, setSidebar] = useState<boolean>(false)
     const [chatHistory, setChatHistory] = useState<ChatHistory[]>([])
     const [windowSize, setWindowSize] = useState<number>(0)
 
     const session = async () => {
         const res = await supabase.auth.getSession()
-        return res.data.session.user.id
+        if(res?.data?.session==null){
+            router.push("/auth/login")
+        }
+        console.log(res?.data)
+        return res?.data?.session?.user?.id
     }
 
     const getConversation = async (userId: string) => {
@@ -94,13 +101,15 @@ export default function MainLayout({
 
     return (
         <>
-                <SidebarContext.Provider value={{ sidebar, setSidebar }}>
-                    <chatHistoryContext.Provider value={{ chatHistory, setChatHistory }}>
+            <SidebarContext.Provider value={{ sidebar, setSidebar }}>
+                <chatHistoryContext.Provider value={{ chatHistory, setChatHistory }}>
 
-                        <div className="gradient-background absolute z-1">
+                    <div className="gradient-background absolute z-1">
 
-                            <div className={`${sidebar ? "translate-x-0 w-3/4 sm:w-2/6 lg:w-2/12 " : " -translate-x-100 "} ${windowSize < 768 ? "" : ""} absolute z-11 left-0 flex justify-center items-center h-full bg-[#15011e] p-5 transition-all duration-300 ease-in-out ${inter.className} text-sm`}>
-                                <div className="flex flex-col h-full justify-start items-start w-full">
+                        {/* <div className={`${sidebar ? "translate-x-0 w-3/4 sm:w-2/6 lg:w-2/12 " : " -translate-x-100 w-0 "} ${windowSize < 768 ? "" : ""} absolute z-11 left-0 flex justify-center items-center h-screen bg-[#181818]
+ py-5 transition-all duration-300 ease-in-out ${inter.className} text-sm border-r border-gray-600/30`}>
+                            <div className="flex flex-col justify-between h-full items-start w-full px-2">
+                                <div className="flex flex-col w-full px-2">
                                     <div
                                         className="flex justify-between items-center w-full">
                                         <span className="text-3xl cursor-default font-bold">
@@ -108,52 +117,63 @@ export default function MainLayout({
                                         </span>
                                         <span
                                             onClick={() => setSidebar(!sidebar)}
-                                            className="cursor-pointer rounded-full hover:bg-[#270238] p-1 hover:rotate-180 transition-all duration-400 ease-in-out">
+                                            className="cursor-pointer rounded-full hover:bg-[#242424] p-1 hover:rotate-180 transition-all duration-400 ease-in-out">
                                             <IoReorderThree size={20} />
                                         </span>
                                     </div>
-                                    <div className="w-full mt-2">
-                                        <div className="hover:bg-[#270238] cursor-pointer rounded-md w-full h-8 p-2 flex gap-2 justify-start items-center">
-                                            <HiOutlinePencilSquare size={15} />
-                                            <span>
-                                                New chat
-                                            </span>
-                                        </div>
-                                        {chatHistory ?
-                                            <div className="flex flex-col justify-center items-start w-full gap-1">
-                                                {
-                                                    chatHistory?.map((c, index) => (
-                                                        <div className="hover:bg-[#270238] cursor-pointer rounded-md w-55 h-8 p-4 flex justify-start items-center truncate"
-                                                            key={c.id}
-                                                            onClick={() => router.push(`/chat/${c.id}`)}>
-                                                            {c.title}
-                                                        </div>
-                                                    ))
-                                                }
-                                            </div>
-                                            :
-                                            <div className="flex flex-col justify-center items-start w-full gap-2">
-                                                <SkeletonHistory width={"3/4"} />
-                                                <SkeletonHistory />
-                                                <SkeletonHistory />
-                                            </div>
-                                        }
+                                    <div
+                                        onClick={() => {
+                                            setSidebar(false)
+                                            router.push('/chat')
+                                        }}
+                                        className="hover:bg-[#242424] cursor-pointer rounded-md w-full h-8 flex gap-2 justify-start items-center">
+                                        <HiOutlinePencilSquare size={20}
+                                        />
+                                        <span>
+                                            New chat
+                                        </span>
                                     </div>
                                 </div>
-                            </div>
-                            {
-                                sidebar &&
-                                <div className="z-10 bg-black/50 w-full h-full absolute cursor-pointer"
-                                    onClick={() => setSidebar(false)}>
-
+                                <div className="text-xs p-2 text-white/60">
+                                    Chat History
                                 </div>
-                            }
-                            <main className="relative z-2 min-h-screen">
-                                {children}
-                            </main>
-                        </div>
-                    </chatHistoryContext.Provider>
-                </SidebarContext.Provider>
+                                <div className="w-full flex-1 mt-2 overflow-x-auto hide-scrollbar rounded-md">
+                                    {(chatHistory.length !== 0) ?
+                                        <div className=" inset-shadow-2xs bg-[#181818]">
+                                            {
+                                                chatHistory?.map((c, index) => (
+                                                    <div key={c.id}>
+                                                        <HistoryList clickedId={c.id} title={c.title} />
+                                                    </div>
+                                                ))
+                                            }
+                                        </div>
+                                        :
+                                        <div className="flex flex-col justify-center items-start w-full h-fit gap-2">
+                                            <SkeletonHistory />
+                                            <SkeletonHistory />
+                                            <SkeletonHistory width={"3/4"} />
+                                        </div>
+                                    }
+                                </div>
+                                <div className="p-2">
+                                    Himanshu Chaudhary
+                                </div>
+                            </div>
+                        </div> */}
+                        {/* {
+                            sidebar &&
+                            <div className="z-10 bg-black/50 w-full h-full absolute cursor-pointer"
+                                onClick={() => setSidebar(false)}>
+
+                            </div>
+                        } */}
+                        <main className="relative z-2 min-h-screen">
+                            {children}
+                        </main>
+                    </div>
+                </chatHistoryContext.Provider>
+            </SidebarContext.Provider>
         </>
     );
 }

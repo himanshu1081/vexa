@@ -12,8 +12,8 @@
 
 /* Global scrollbar variables */
 :root {
-  --sb-track-color: #232E33;
-  --sb-thumb-color: #7022ad;
+  --sb-track-color: #5b975e;
+  --sb-thumb-color: #356538;
   --sb-size: 5px;
 }
 
@@ -26,7 +26,7 @@
 /* Track */
 *::-webkit-scrollbar-track {
   background: var(--sb-track-color);
-  border-radius: 3px;
+  border-radius: 5px;
 }
 
 /* Thumb */
@@ -37,7 +37,7 @@
 
 /* Thumb hover (nice UX) */
 *::-webkit-scrollbar-thumb:hover {
-  background: #8c3ad6;
+  background: #87e28c;
 }
 
 /* Firefox */

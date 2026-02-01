@@ -34,7 +34,7 @@ export default function Page() {
           initial={{ y: 30, opacity: 0, backdropFilter: 2 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.8, delay: 0.6 }}>
-          <Link href="auth/login" className="md:px-4 md:py-3 bg-[#50056e] rounded-full text-lg hover:bg-[#7700a5] transition-all duration-75 ease-in border border-white/20 cursor-pointer px-3 py-1">
+          <Link href="auth/login" className="md:px-4 md:py-3 bg-[#0f6f3f] rounded-full text-lg hover:bg-[#052e1a] transition-all duration-75 ease-in border border-white/20 cursor-pointer px-3 py-1">
             Get Started
           </Link>
         </motion.div>

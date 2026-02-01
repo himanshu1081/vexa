@@ -13,7 +13,7 @@ export default function ClientLayout() {
             {!hideBg && (
                 <div className="fixed object-contain w-screen h-screen z-0">
                     <ColorBends
-                        colors={['#bd2bf3']}
+                        colors={['#1b9d5c']}
                         rotation={0}
                         speed={0.3}
                         scale={1}

@@ -19,6 +19,7 @@ export async function POST(req: Request) {
         temperature: 0.7,
         max_tokens: 850,
     });
+    console.log(completion.choices[0].message.content)
 
 
     // const response = await client.responses.create({

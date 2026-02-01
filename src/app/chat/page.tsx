@@ -4,13 +4,17 @@ import { Manrope } from "next/font/google";
 import { useState, createContext, useRef, ChangeEvent, useContext, useEffect } from "react";
 import { supabase } from "../lib/supabase";
 import { useRouter } from "next/navigation";
-import { motion } from "motion/react"
+import { motion, AnimatePresence } from "motion/react"
 import { SidebarContext } from "./layout";
 import { chatHistoryContext } from "./layout";
+import SkeletonHistory from "../../components/SkeletonHistory";
 
 //icons
 import { FaArrowUpLong } from "react-icons/fa6";
-import { IoReorderThree } from "react-icons/io5";
+import { FiSidebar } from "react-icons/fi";
+import { HiOutlinePencilSquare } from "react-icons/hi2";
+import HistoryList from "../../components/HistoryList";
+import { RxCross2 } from "react-icons/rx";
 
 const inter = Inter({
     subsets: ["latin"],
@@ -49,7 +53,7 @@ export default function Page() {
 
     const { chatHistory, setChatHistory } = useContext(chatHistoryContext)
     const { sidebar, setSidebar } = useContext(SidebarContext)
-
+    const [windowSize, setWindowSize] = useState<number>(0)
     const router = useRouter();
     const chatAreaRef = useRef<HTMLDivElement | null>(null);
     const [isSending, setIsSending] = useState<boolean>(false);
@@ -57,18 +61,14 @@ export default function Page() {
     const [userPrompt, setUserPrompt] = useState<string>("");
     const [conversation, setConversation] = useState<Conversation | null>(null);
 
-    //creating a conversation
-
-    //     {
-    //     "id": "d6b4630b-6956-4c44-8831-5dde615b1d43",
-    //     "user_id": "1ebed8d3-9dca-4e6e-826a-7317d9ccbdf3",
-    //     "created_at": "2026-01-10T21:57:52.650091+00:00",
-    //     "title": "hi"
-    // }
+    // creating a conversation
     const createConversation = async () => {
 
         const { data: sessionData } = await supabase.auth.getSession();
-        console.log("session:", sessionData);
+        // if(sessionData.length==0){
+        //     router.push("/login")
+        // }
+        console.log("session here:", sessionData);
 
         if (conversation) return conversation;
         try {
@@ -130,74 +130,162 @@ export default function Page() {
         setUserPrompt(e.target.value);
     }
 
+    useEffect(() => {
+
+        const handleResize = () => setWindowSize(window.innerWidth)
+
+        handleResize();
+
+        window.addEventListener("resize", handleResize)
+        return () => window.removeEventListener("resize", handleResize)
+    }, [])
+
     return (
         <>
 
-            <div className={`flex justify-center items-center w-screen h-screen ${instrumentFont.className} `}>
-                <div className="flex flex-col justify-center items-center flex-1 h-full">
-                    <div className="h-full w-full flex justify-between items-center flex-col p-5">
-                        <div className=" h-fit w-full flex text-xs md:text-base justify-between items-center p-1">
-                            <span className="flex justify-center items-center gap-2 h-fit">
+            <div className={`flex justify-between items-center w-screen h-screen ${instrumentFont.className} `}>
+                {
+                    sidebar &&
+                    <div className="z-10 bg-black/50 w-full h-full absolute cursor-pointer lg:opacity-0 lg:pointer-events-none"
+                        onClick={() => setSidebar(false)}>
+
+                    </div>
+                }
+                <AnimatePresence>
+                    {sidebar &&
+                        <motion.div
+                            initial={{ x: -20, opacity: 0 }}
+                            animate={{ x: -0, opacity: 1 }}
+                            transition={{ duration: .2 }}
+                            exit={{ x: -20, opacity: 0 }}
+                            className={`h-full w-3/4 md:w-2/6 lg:w-1/4 absolute lg:relative z-10 text-sm`}>
+                            <div className="flex flex-col justify-between h-screen items-start w-full">
+                                <div className="flex flex-col w-full h-full gap-5 justify-between items-center p-4">
+                                    <div
+                                        className="flex justify-between items-center w-full bg-[#181818] p-4 rounded-2xl">
+                                        <span className="text-3xl cursor-default font-bold">
+                                            Vexa
+                                        </span>
+                                        <span
+                                            onClick={() => setSidebar(!sidebar)}
+                                            className="cursor-pointer rounded-full hover:bg-[#242424] p-1 hover:rotate-180 transition-all duration-400 ease-in-out">
+                                            <RxCross2 size={20} />
+                                        </span>
+                                    </div>
+                                    <div className="bg-[#181818] w-full flex-1 flex flex-col rounded-2xl p-4 overflow-hidden">
+                                        <div
+                                            onClick={() => {
+                                                setSidebar(false)
+                                                router.push('/chat')
+                                            }}
+                                            className="hover:bg-[#242424] cursor-pointer rounded-md w-full p-2 flex gap-2 justify-start items-center">
+                                            <HiOutlinePencilSquare size={20}
+                                            />
+                                            <span>
+                                                New chat
+                                            </span>
+                                        </div>
+                                        {sidebar && <div className="w-full mt-2 flex-1 overflow-hidden rounded-md">
+                                            <div className="text-xs p-2 text-white/60 border-b border-white/10">
+                                                Chat History
+                                            </div>
+                                            <div className="flex-1 pb-10 h-full overflow-y-auto">
+                                                {(chatHistory.length !== 0) ?
+                                                    <div className="inset-shadow-2xs">
+                                                        {
+                                                            chatHistory?.map((c, index) => (
+                                                                <div key={c.id}>
+                                                                    <HistoryList clickedId={c.id} title={c.title} />
+                                                                </div>
+                                                            ))
+                                                        }
+                                                    </div>
+                                                    :
+                                                    <div className="flex flex-col justify-center items-start w-full flex-1 gap-2 mt-2">
+                                                        <SkeletonHistory />
+                                                        <SkeletonHistory />
+                                                        <SkeletonHistory width={"3/4"} />
+                                                    </div>
+                                                }
+                                            </div>
+
+                                        </div>}
+                                        <div className="p-2 border-t border-white/10">
+                                            Himanshu Chaudhary
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </motion.div>}
+                </AnimatePresence>
+
+                <div className="flex flex-col justify-center items-center w-full h-full">
+                    <div className="h-full w-full flex justify-between items-center flex-col p-1">
+                        <div className="h-fit w-full flex text-xs md:text-sm justify-between items-start p-2">
+                            <span className={`flex justify-center items-center gap-2 h-fit ${sidebar?"opacity-0":""}`}>
                                 <span
                                     className="cursor-pointer  rounded-full hover:bg-[#454545] p-1 "
                                     onClick={() => setSidebar(!sidebar)}>
-                                    <IoReorderThree size={20} />
+                                    <FiSidebar size={20} />
                                 </span>
                             </span>
-                            <span>
+                            <span className="w-fit h-full flex items-center justify-center">
                                 <span
-                                    className="cursor-pointer p-2 bg-red-500 hover:bg-red-600 rounded-lg font-medium text-sm"
+                                    className="cursor-pointer px-2 py-1 bg-red-500 hover:bg-red-600 rounded-lg font-medium"
                                     onClick={logout}>
                                     Logout
                                 </span>
                             </span>
                         </div>
-                        <div className="flex flex-col w-full h-full justify-center items-center">
-                            <div className=" flex flex-col w-full h-full justify-center items-center">
-                                <motion.span
-                                    initial={{ y: 20, opacity: 0, filter: "blur(12px)" }}
-                                    animate={{ y: 0, opacity: 1, filter: 0 }}
-                                    transition={{ duration: .5, ease: "easeInOut" }}
-                                    className="text-4xl md:text-5xl xl:text-8xl font-bold">
-                                    Vexa AI
-                                </motion.span>
-                                <motion.div
-                                    initial={{ y: 20, opacity: 0, filter: "blur(12px)" }}
-                                    animate={{ y: 0, opacity: 1, filter: 0 }}
-                                    transition={{ duration: .5, delay: .3 }}
-                                    className={`${manrope.className} text-xl md:text-2xl lg:text-4xl xl:text-6xl font-light tracking-tighter text-center`}>
-                                    how can i help you today?
-                                </motion.div>
-                                <motion.div
-                                    initial={{ y: 20, opacity: 0, filter: "blur(12px)" }}
-                                    animate={{ y: 0, opacity: 1, filter: 0 }}
-                                    transition={{ duration: .5, delay: .5 }}
-                                    className="text-xs md:text-sm font-medium mt-2 text-center text-[#a0adbc]">
-                                    Describe what you want the AI to help you with, and it will generate a response for you.
-                                </motion.div>
+                        {/* Chat area */}
+                        <div className="h-full w-full flex items-center  justify-center">
+                            <div className="flex flex-col w-full h-full justify-center items-center">
+                                <div className=" flex flex-col w-full h-full justify-center items-center">
+                                    <motion.span
+                                        initial={{ y: 20, opacity: 0, filter: "blur(12px)" }}
+                                        animate={{ y: 0, opacity: 1, filter: 0 }}
+                                        transition={{ duration: .5, ease: "easeInOut" }}
+                                        className="text-4xl md:text-6xl xl:text-8xl font-bold">
+                                        Vexa AI
+                                    </motion.span>
+                                    <motion.div
+                                        initial={{ y: 20, opacity: 0, filter: "blur(12px)" }}
+                                        animate={{ y: 0, opacity: 1, filter: 0 }}
+                                        transition={{ duration: .5, delay: .3 }}
+                                        className={`${manrope.className} text-xl md:text-3xl lg:text-4xl xl:text-6xl font-light tracking-tighter text-center`}>
+                                        how can i help you today?
+                                    </motion.div>
+                                    <motion.div
+                                        initial={{ y: 20, opacity: 0, filter: "blur(12px)" }}
+                                        animate={{ y: 0, opacity: 1, filter: 0 }}
+                                        transition={{ duration: .5, delay: .5 }}
+                                        className="text-xs lg:text-sm font-medium mt-2 text-center text-[#a0adbc]">
+                                        Describe what you want the AI to help you with, and it will generate a response for you.
+                                    </motion.div>
+                                </div>
                             </div>
-                        </div>
-                        <div
-                            className="bg-[#2c2c30] backdrop-blur-2xl shadow-2xl border-2 border-black/20 p-3 rounded-2xl flex w-11/12 sm:w-3/4 md:w-3/4 lg:w-2/4 h-fit lg:min-h-20 max-h-2/4 justify-between items-center gap-2 overflow-scroll hide-scrollbar absolute bottom-5">
-                            <textarea
-                                ref={inputTextRef}
-                                rows={1}
-                                placeholder="Ask anything..."
-                                onChange={handleUserInput}
-                                onInput={handleInput}
-                                onKeyDown={!isSending ? handleKeyDown : undefined}
-                                value={userPrompt}
-                                className="text-sm md:text-base focus:outline-0 flex-1 focus:ring-0 p-2 resize-none max-h-40 overflow-y-scroll hide-scrollbar"
-                            />
-                            <span
-                                onClick={!isSending && userPrompt.trim() ? redirectPage : undefined}
-                                className={`rounded-full text-black p-2 ${isSending || !userPrompt.trim()
-                                    ? "bg-gray-400 cursor-not-allowed"
-                                    : "bg-white cursor-pointer"
-                                    }`}
-                            >
-                                <FaArrowUpLong />
-                            </span>
+                            <div
+                                className="bg-[#2c2c30] backdrop-blur-2xl shadow-2xl border-2 border-black/20 p-3 rounded-2xl flex w-11/12 sm:w-3/4 md:w-3/4 lg:w-2/4 h-fit lg:min-h-20 max-h-2/4 justify-between items-center gap-2 overflow-scroll hide-scrollbar absolute bottom-5">
+                                <textarea
+                                    ref={inputTextRef}
+                                    rows={1}
+                                    placeholder="Ask anything..."
+                                    onChange={handleUserInput}
+                                    onInput={handleInput}
+                                    onKeyDown={!isSending ? handleKeyDown : undefined}
+                                    value={userPrompt}
+                                    className="text-sm md:text-base focus:outline-0 flex-1 focus:ring-0 p-2 resize-none max-h-40 overflow-y-scroll hide-scrollbar"
+                                />
+                                <span
+                                    onClick={!isSending && userPrompt.trim() ? redirectPage : undefined}
+                                    className={`rounded-lg text-black p-3 ${isSending || !userPrompt.trim()
+                                        ? "bg-[#00CC66] cursor-not-allowed"
+                                        : "bg-[#00CC66] cursor-pointer"
+                                        }`}
+                                >
+                                    <FaArrowUpLong />
+                                </span>
+                            </div>
                         </div>
                     </div>
                 </div>
