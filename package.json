@@ -12,7 +12,7 @@
     "axios": "^1.13.2",
     "groq-sdk": "^0.37.0",
     "motion": "^12.23.24",
-    "next": "16.0.3",
+    "next": "16.0.10",
     "openai": "^6.15.0",
     "react": "19.2.0",
     "react-aria-components": "^1.13.0",
