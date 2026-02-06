@@ -57,7 +57,6 @@ export default function MainLayout({
         if (res?.data?.session == null) {
             router.push("/auth/login")
         }
-        console.log(res?.data)
         return res?.data?.session?.user?.id
     }
 
@@ -138,7 +137,7 @@ export default function MainLayout({
                                         {
                                             chatHistory?.map((c, index) => (
                                                 <div key={c.id}>
-                                                    <HistoryList clickedId={c.id} title={c.title} />
+                                                    <HistoryList clickedId={c.id} t={c.title} />
                                                 </div>
                                             ))
                                         }

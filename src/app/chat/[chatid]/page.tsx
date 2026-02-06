@@ -1,7 +1,7 @@
 "use client";
 import { Inter, Instrument_Sans } from "next/font/google";
 import { Manrope } from "next/font/google";
-import { useState, useRef, ChangeEvent, useContext, useEffect } from "react";
+import { useState, useRef, ChangeEvent, useContext, useEffect, Children } from "react";
 import { supabase } from "../../lib/supabase";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "motion/react"
@@ -11,7 +11,7 @@ import SkeletonHistory from "../../../components/SkeletonHistory";
 import axios from "axios";
 import { chatHistoryContext } from "../layout";
 import ReactMarkdown from "react-markdown";
-
+import remarkGfm from 'remark-gfm'
 
 //icons
 import { FaArrowUpLong } from "react-icons/fa6";
@@ -91,7 +91,7 @@ export default function Page() {
     const SYSTEM_MESSAGE: Message = {
         role: "system",
         content: `You are a helpful, friendly AI assistant.
-        Reply in under 700 tokens. Be concise.
+        Reply in under 700 tokens.If they ask you to make build something like a website then you can use as much as you want but not more than 19000. Be concise.
     Explain things clearly and step-by-step when needed.
     Be concise but not dry.
     Use a natural, human tone.
@@ -185,10 +185,6 @@ export default function Page() {
         return () => el.removeEventListener('scroll', fetchData)
     }, [messages])
 
-    useEffect(() => {
-        console.log("messages : ", messages.length)
-
-    }, [messages])
 
     useEffect(() => {
 
@@ -238,64 +234,6 @@ export default function Page() {
         el.style.height = el.scrollHeight + "px"; // grow
     };
 
-    const styleReply = (text: string) => {
-        let textarr = text.split(".")
-        console.log(textarr)
-        return textarr.map((t, index) => {
-            if (t.startsWith("###")) {
-                return (
-                    <div key={index} className="text-xl font-bold">
-                        {t.slice(3)}
-                    </div>
-                );
-            }
-
-            if (t.startsWith("##")) {
-                return (
-                    <div key={index} className="text-lg font-bold">
-                        {t.slice(2)}
-                    </div>
-                );
-            }
-
-            if (/^\*\*(.*?)\*\*$/.test(t)) {
-                return (
-                    <div className="font-bold">
-                        {t.slice(2, - 2)}
-                    </div>
-                )
-            }
-
-            return (
-                <div key={index} className="text-sm lg:text-base">
-                    {t}
-                </div>
-            );
-        });
-
-    }
-
-    function renderBoldText(text: string) {
-        // Step 1: split text by new lines
-        let lines = text.split("\n");
-        lines = text.split("<br>");
-        return lines.map((line, lineIndex) => {
-            // Step 2: split each line by *** ***
-            const parts = line.split(/\*\*(.*?)\*\*/g);
-
-            return (
-                <div key={lineIndex}>
-                    {parts.map((part, partIndex) =>
-                        partIndex % 2 === 1 ? (
-                            <strong key={partIndex}>{part}</strong>
-                        ) : (
-                            part
-                        )
-                    )}
-                </div>
-            );
-        });
-    }
 
     const saveMessage = async (conversation_id: string, role: "user" | "assistant" | "system"
         , content: string) => {
@@ -379,16 +317,22 @@ export default function Page() {
     };
 
     const handleUserMessage = async () => {
+        const date = Date.now()
+        console.log(date.toLocaleString())
+        console.log(typeof (date))
         const { data } = await saveMessage(chatid, "user", userPrompt);
+        console.log(data.timestamp)
+        console.log(typeof (data.timestamp))
 
-        const updatedMessages: Message =
-            { role: "user", content: userPrompt, timestamp: data.timestamp }
+        const updatedMessages: Message = { role: "user", content: userPrompt, timestamp: data.timestamp }
 
         setMessages(prev => [...prev, updatedMessages]);
         setUserPrompt("");
 
-        scrollDown()
 
+        requestAnimationFrame(() => {
+            scrollDown()
+        })
     }
 
     const handleAiReply = async () => {
@@ -434,23 +378,27 @@ export default function Page() {
 
     return (
         <>
+            {/* ROOT LAYOUT */}
+            <div
+                className={`relative flex w-screen h-screen  ${instrumentFont.className}`}
+            >
+                {/* BACKDROP FOR SIDEBAR (MOBILE ONLY) */}
+                {sidebar && (
+                    <div
+                        className="fixed inset-0 z-10 bg-black/50 lg:hidden"
+                        onClick={() => setSidebar(false)}
+                    />
+                )}
 
-            <div className={`flex justify-between items-center w-screen h-screen ${instrumentFont.className} `}>
-                {
-                    sidebar &&
-                    <div className="z-10 bg-black/50 w-full h-full absolute cursor-pointer lg:opacity-0 lg:pointer-events-none"
-                        onClick={() => setSidebar(false)}>
-
-                    </div>
-                }
+                {/* SIDEBAR */}
                 <AnimatePresence>
                     {sidebar &&
                         <motion.div
                             initial={{ x: -20, opacity: 0 }}
-                            animate={{ x: 0, opacity: 1 }}
+                            animate={{ x: -0, opacity: 1 }}
+                            transition={{ duration: .2 }}
                             exit={{ x: -20, opacity: 0 }}
-                            transition={{ duration: 0.2 }}
-                            className={`h-full w-3/4 md:w-2/6 xl:w-1/4 absolute lg:relative z-10 text-sm`}>
+                            className={`h-full w-3/4 md:w-2/6 lg:w-1/4 absolute lg:relative z-10 text-sm`}>
                             <div className="flex flex-col justify-between h-screen items-start w-full">
                                 <div className="flex flex-col w-full h-full gap-5 justify-between items-center p-4">
                                     <div
@@ -481,13 +429,13 @@ export default function Page() {
                                             <div className="text-xs p-2 text-white/60 border-b border-white/10">
                                                 Chat History
                                             </div>
-                                            <div className="flex-1 pt-1 pb-10 h-full overflow-y-auto">
+                                            <div className="flex-1 pb-10 h-full overflow-y-auto">
                                                 {(chatHistory.length !== 0) ?
                                                     <div className="inset-shadow-2xs">
                                                         {
                                                             chatHistory?.map((c, index) => (
                                                                 <div key={c.id}>
-                                                                    <HistoryList clickedId={c.id} title={c.title} />
+                                                                    <HistoryList clickedId={c.id} t={c.title} />
                                                                 </div>
                                                             ))
                                                         }
@@ -510,137 +458,165 @@ export default function Page() {
                             </div>
                         </motion.div>}
                 </AnimatePresence>
-                <div className="flex flex-col justify-center items-center w-full h-full">
-                    <div className="h-full w-full flex justify-between items-center flex-col p-1">
-                        <div className="h-fit w-full flex text-xs md:text-sm justify-between items-start p-3">
-                            <span className="flex justify-center items-center gap-2 h-fit">
-                                <span
-                                    className="cursor-pointer  rounded-full hover:bg-[#454545] p-1 "
-                                    onClick={() => setSidebar(!sidebar)}>
-                                    <FiSidebar size={20} />
-                                </span>
-                                <span
-                                    onClick={() => {
-                                        router.push('/chat')
-                                    }}
-                                    className="whitespace-nowrap font-medium cursor-pointer bg-gray-200 hover:bg-gray-300 text-black  py-1 px-2 rounded-lg">
-                                    New Chat
-                                </span>
+
+                {/* MAIN CHAT AREA */}
+                <div className={`flex flex-col flex-1 relative ${sidebar ? "lg:max-w-3/4" : "max-w-6/6"} `}>
+                    {/* HEADER */}
+                    <div className="flex items-center justify-between p-3 text-sm border-b border-white/10">
+                        <div className="flex items-center gap-2">
+                            <span
+                                className="p-1 rounded-full hover:bg-[#454545] cursor-pointer"
+                                onClick={() => setSidebar(!sidebar)}
+                            >
+                                <FiSidebar size={20} />
                             </span>
-                            <span className="w-fit h-full flex items-center justify-center">
-                                <span
-                                    className="cursor-pointer px-2 py-1 bg-red-500 hover:bg-red-600 rounded-lg font-medium"
-                                    onClick={logout}>
-                                    Logout
-                                </span>
+
+                            <span
+                                onClick={() => router.push("/chat")}
+                                className="cursor-pointer bg-gray-200 hover:bg-gray-300 text-black px-3 py-1 rounded-lg"
+                            >
+                                New Chat
                             </span>
                         </div>
-                        <div
-                            ref={chatAreaRef}
-                            className={`h-full w-full flex flex-col justify-start items-start ${sidebar ? "px-2 sm:px-26 lg:px-32 xl:px-58" : "px-2 sm:px-26 lg:px-64 xl:px-96"}  pb-40 mb-16 md:mb-17 lg:mb-20 xl:mb-23 p-1 lg:p-0 overflow-y-auto`}>
 
-                            {
-                                hasFetchedAll == true ?
-                                    <motion.div
-                                        initial={{ y: -20, opacity: 0 }}
-                                        animate={{ y: 0, opacity: 1 }}
-                                        transition={{ duration: .5 }}
-                                        viewport={{ once: true }}
-                                        className="flex items-center justify-between w-full gap-2 text-gray-500 text-xs">
-                                        <div className="flex-1 h-px bg-gray-500" />
-                                        <span>That's All</span>
-                                        <div className="flex-1 h-px bg-gray-500" />
-                                    </motion.div>
-                                    :
+                        <span
+                            onClick={logout}
+                            className="cursor-pointer bg-red-500 hover:bg-red-600 px-3 py-1 rounded-lg"
+                        >
+                            Logout
+                        </span>
+                    </div>
 
-                                    <motion.span
-                                        className="w-full text-center text-transparent bg-clip-text bg-linear-to-r from-gray-400 via-white to-gray-400"
-                                        initial={{ backgroundPosition: "200% 0%" }}
-                                        animate={{ backgroundPosition: "-200% 0%" }}
-                                        transition={{
-                                            duration: 4,
-                                            repeat: Infinity,
-                                            ease: "linear",
-                                        }}
-                                        style={{ backgroundSize: "200% 100%" }}
-                                    >
-                                        Loading...
-                                    </motion.span>
-                            }
-                            {
-                                [...messages]?.map((c, index) => (
-                                    <div
-                                        className="w-full h-fit flex text-sm lg:text-base"
-                                        key={index}>
-                                        {
-                                            c?.role == "user" ?
-                                                <div className="w-full flex flex-col justify-end h-fit gap-5">
-                                                    <div className=" border-gray-900 w-full py-2" />
-                                                    <div className="w-full flex justify-end h-fit">
-                                                        <motion.div
-                                                            initial={{ opacity: 0, y: 20 }}
-                                                            animate={{ opacity: 1, y: 0 }}
-                                                            transition={{ duration: 1 }}
-                                                            className="px-3 py-1 bg-[#262327] h-fit w-fit max-w-3/4 rounded-lg hide-scrollbar whitespace-pre-wrap my-2">
-                                                            <ReactMarkdown>{c.content}</ReactMarkdown>
+                    {/* SCROLLABLE CHAT BODY (ONLY SCROLLER) */}
+                    <div
+                        ref={chatAreaRef}
+                        className={`flex-1 overflow-y-auto px-1 lg:px-3 ${sidebar ? "lg:px-34 xl:px-50" : "sm:px-22 md:px-24 lg:px-54 xl:px-96"}  py-4 space-y-4 text-sm lg:text-base`}
+                    >
+                        {hasFetchedAll ? (
+                            <motion.div
+                                initial={{ opacity: 0, y: -10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="flex items-center gap-2 text-xs text-gray-500"
+                            >
+                                <div className="flex-1 h-px bg-gray-500" />
+                                <span>That's all</span>
+                                <div className="flex-1 h-px bg-gray-500" />
+                            </motion.div>
+                        ) : (
+                            <div className="text-center text-xs text-gray-400">Loading...</div>
+                        )}
 
-                                                        </motion.div>
-                                                    </div>
+                        {messages.map((c, index) => (
+                            <div key={index} className="w-full overflow-hidden">
+                                {c.role === "user" ?
+                                    (
+                                        <div className="flex justify-end">
+                                            <div className="bg-[#262327] px-3 py-2 rounded-lg max-w-[50%]">
+                                                <ReactMarkdown>{c.content.trim()}</ReactMarkdown>
+                                            </div>
+                                        </div>
+                                    ) :
+                                    c.role == "assistant" ?
+                                        (
+                                            <div className="flex justify-start">
+                                                <div className=" px-3 py-2 rounded-lg max-w-4/4">
+                                                    <ReactMarkdown remarkPlugins={[remarkGfm]}
+                                                        components={{
+                                                            code({ node, inline, className, children, ...props }: any) {
+                                                                if (inline) {
+                                                                    return (
+                                                                        <code className="text-white rounded inline" {...props}>
+                                                                            {children}
+                                                                        </code>
+                                                                    )
+                                                                }
+
+                                                                return (
+                                                                    <pre className="bg-green-900/50 p-4 m-1 rounded-md overflow-auto">
+                                                                        <code className="text-white">{children}</code>
+                                                                    </pre>
+                                                                )
+                                                            },
+                                                            table({ node, inline, className, children, ...props }: any) {
+                                                                return (
+                                                                    <table className="overflow-auto rounded-xl bg-[#181818]/50 text-sm w-full my-4">
+                                                                        {children}
+                                                                    </table>
+                                                                )
+                                                            }
+                                                            ,
+                                                            th({ node, inline, className, children, ...props }: any) {
+                                                                return (
+                                                                    <th className=" border border-gray-300 p-2" {...props}>
+                                                                        {children}
+                                                                    </th>
+                                                                )
+                                                            },
+                                                            td({ node, inline, className, children, ...props }: any) {
+                                                                return (
+                                                                    <td className="p-2 border rounded-2xl">
+                                                                        {children}
+                                                                    </td>
+                                                                )
+                                                            },
+                                                            tr({ node, inline, className, children, ...props }: any) {
+                                                                return (
+                                                                    <tr className="p-2 ">
+                                                                        {children}
+                                                                    </tr>
+                                                                )
+                                                            },
+                                                            hr({ node, ...props }) {
+                                                                return (
+                                                                    <hr className="my-6 border-gray-300" {...props} />
+                                                                )
+                                                            },
+                                                        }
+                                                        }
+                                                    >
+                                                        {c.content}
+                                                    </ReactMarkdown>
                                                 </div>
-                                                : c?.role == "assistant" ?
-                                                    <div className="h-fit w-fit overflow-x-auto hide-scrollbar max-w-4/4 md:max-w-3/4 bg-[#171717] rounded-lg my-2">
-                                                        <motion.div
-                                                            initial={{ opacity: 0, y: 20 }}
-                                                            animate={{ opacity: 1, y: 0 }}
-                                                            transition={{ duration: 1 }}
-                                                            className="px-3 py-1  flex flex-col gap-1 lg:gap-2 h-fit w-fit whitespace-break-spaces my-2 ">
-                                                            <ReactMarkdown>{c.content}</ReactMarkdown>
-                                                        </motion.div>
-                                                    </div>
-                                                    :
-                                                    <>
-                                                    </>
-                                        }
-                                    </div>
-                                ))
-                            }
-                        </div>
-                        <div className="flex items-center justify-center w-11/12 sm:w-3/4 md:w-3/4 lg:w-2/4 ">
-                            {
-                                IsScrolledUp &&
-                                <motion.div
-                                    initial={{ opacity: 0, scale: 0.9 }}
-                                    whileInView={{ y: 0, opacity: 1 }}
-                                    exit={{ opacity: 0, scale: 0.9 }}
-                                    transition={{ duration: 0.2 }}
-                                    className="fixed p-2 bg-gray-900 hover:bg-gray-600 cursor-pointer border-black/20 border rounded-full bottom-30"
-                                    onClick={scrollDown}>
-                                    <FaArrowDown />
-                                </motion.div>
-                            }
-                        </div>
-                        <div
-                            className="bg-[#2c2c30] backdrop-blur-2xl shadow-2xl border-2 border-black/20 p-3 rounded-2xl flex w-11/12 sm:w-3/4 md:w-3/4 lg:w-2/4 h-fit lg:min-h-20 max-h-2/4 justify-between items-center gap-2 overflow-scroll hide-scrollbar absolute bottom-5">
+                                            </div>
+                                        ) :
+                                        <div></div>
+                                }
+                            </div>
+                        ))}
+                    </div>
 
+                    {/* INPUT BAR (STICKY & RESPONSIVE) */}
+                    <div className="sticky bottom-0 w-full pb-5">
+                        <div className={`rounded-lg mx-auto flex items-end gap-2 w-11/12 ${sidebar ? "" : "lg:w-3/6"}  bg-[#2c2c30] p-5 border border-white/10`}>
                             <textarea
                                 ref={inputTextRef}
                                 rows={1}
                                 placeholder="Ask anything..."
+                                value={userPrompt}
                                 onChange={handleUserInput}
                                 onInput={handleInput}
                                 onKeyDown={!isSending ? handleKeyDown : undefined}
-                                value={userPrompt}
-                                className="text-sm md:text-base focus:outline-0 flex-1 focus:ring-0 p-2 resize-none max-h-40 overflow-y-scroll hide-scrollbar"
+                                className="
+                flex-1 resize-none max-h-40
+                p-2 rounded-lg
+                text-sm md:text-base
+                focus:outline-none
+                overflow-y-auto
+              "
                             />
-                            <span
-                                onClick={!isSending && userPrompt.trim() ? getReply : undefined}
-                                className={`rounded-lg text-black p-3 ${isSending || !userPrompt.trim()
-                                    ? "bg-[#00CC66] cursor-not-allowed"
-                                    : "bg-[#00CC66] cursor-pointer"
-                                    }`}
+
+                            <button
+                                disabled={isSending || !userPrompt.trim()}
+                                onClick={!isSending ? getReply : undefined}
+                                className="
+                p-3 rounded-lg
+                bg-[#00CC66]
+                disabled:opacity-50
+                disabled:cursor-not-allowed
+              "
                             >
                                 <FaArrowUpLong />
-                            </span>
+                            </button>
                         </div>
                     </div>
                 </div>

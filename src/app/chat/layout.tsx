@@ -59,7 +59,6 @@ export default function MainLayout({
         if(res?.data?.session==null){
             router.push("/auth/login")
         }
-        console.log(res?.data)
         return res?.data?.session?.user?.id
     }
 

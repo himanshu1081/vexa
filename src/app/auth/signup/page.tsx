@@ -206,7 +206,7 @@ export default function Page() {
             </span>
             <span
               onClick={signUpNewUser}
-              className="md:px-4 md:py-3 px-3 py-1 bg-[#50056e] rounded-full text-base  md:text-sm border border-white/20 cursor-pointer hover:bg-[#7700a5] transition-all duration-75 ease-in">
+              className="md:px-4 md:py-3 px-3 py-1 bg-[#0f6f3f] rounded-full text-base  md:text-sm border border-white/20 cursor-pointer hover:bg-[#052e1a] transition-all duration-75 ease-in">
               Sign Up
             </span>
           </div>
@@ -240,7 +240,7 @@ export default function Page() {
             <div className="flex flex-col md:flex-row md:gap-2 items-center justify-center text-xs md:text-sm">
               Already have an account ?
               <Link href="/auth/login" className=" hover:text-white underline">
-                Sign in.
+                Log in
               </Link>
             </div>
           </div>

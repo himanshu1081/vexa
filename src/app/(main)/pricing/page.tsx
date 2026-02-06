@@ -84,21 +84,33 @@ export default function Page() {
             initial={{ y: -60, opacity: 0 }}
             animate={{ y: 0, opacity: 0.2 }}
             transition={{ duration: 0.8 }}
-            className={`${inter.className} opacity-15 text-[#8e19b9] w-screen h-screen flex items-center justify-center fixed top-10`}>
+            className={`${inter.className} opacity-10 text-[#0f6f3f] w-screen h-screen flex items-center justify-center fixed top-10`}>
             Pricing
           </motion.span>
         </div>
         <div className="flex flex-col gap-5 w-full h-full lg:justify-center items-center p-5 ">
-          <div className="p-1 md:p-2 bg-white  text-black w-fit h-fit rounded-4xl cursor-pointer text-sm md:text-base mt-15 md:mt-20"
-            onClick={handleToggle}>
-            <div className="flex justify-center items-center gap-2 ">
-              <span className={`${priceUnit == 'month' ? "bg-[#50056e] text-white" : "bg-white"} w-full h-full p-2 rounded-4xl`}>
+          <div
+            className="p-1 md:p-2 bg-white text-black rounded-full cursor-pointer text-sm md:text-base mt-16 md:mt-20"
+            onClick={handleToggle}
+          >
+            <div className="flex items-center gap-2">
+              <span
+                className={`px-3 py-1.5 rounded-full transition ${priceUnit === "month"
+                    ? "bg-[#0f6f3f] text-white"
+                    : "text-black"
+                  }`}
+              >
                 Monthly
               </span>
-              <span>
-                |
-              </span>
-              <span className={`${priceUnit == 'year' ? "bg-[#50056e] text-white" : "bg-white"} p-2 rounded-4xl`}>
+
+              <span className="text-black/40">|</span>
+
+              <span
+                className={`px-3 py-1.5 rounded-full transition ${priceUnit === "year"
+                    ? "bg-[#0f6f3f] text-white"
+                    : "text-black"
+                  }`}
+              >
                 Yearly
               </span>
             </div>

@@ -195,7 +195,7 @@ export default function Page() {
                                                         {
                                                             chatHistory?.map((c, index) => (
                                                                 <div key={c.id}>
-                                                                    <HistoryList clickedId={c.id} title={c.title} />
+                                                                    <HistoryList clickedId={c.id} t={c.title} />
                                                                 </div>
                                                             ))
                                                         }
@@ -278,7 +278,7 @@ export default function Page() {
                                 />
                                 <span
                                     onClick={!isSending && userPrompt.trim() ? redirectPage : undefined}
-                                    className={`rounded-lg text-black p-3 ${isSending || !userPrompt.trim()
+                                    className={`rounded-lg  p-3 ${isSending || !userPrompt.trim()
                                         ? "bg-[#00CC66] cursor-not-allowed"
                                         : "bg-[#00CC66] cursor-pointer"
                                         }`}

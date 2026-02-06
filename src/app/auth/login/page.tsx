@@ -190,7 +190,7 @@ export default function Page() {
                 </span>
                 <span
                   onClick={resetLink}
-                  className="md:px-4 md:py-3 px-3 py-1 bg-[#50056e] rounded-full text-base  md:text-sm border border-white/20 cursor-pointer hover:bg-[#7700a5] ">
+                  className="md:px-4 md:py-3 px-3 py-1 bg-[#0f6f3f] rounded-full text-base  md:text-sm border border-white/20 cursor-pointer hover:bg-[#7700a5] ">
                   Send reset link
                 </span>
               </div>
@@ -258,7 +258,7 @@ export default function Page() {
             </span>
             <span
               onClick={signInWithPassword}
-              className="md:px-4 md:py-3 px-3 py-1 bg-[#50056e] rounded-full text-base  md:text-sm border border-white/20 cursor-pointer hover:bg-[#7700a5] ">
+              className="md:px-4 md:py-3 px-3 py-1 bg-[#0f6f3f] rounded-full text-base  md:text-sm border border-white/20 cursor-pointer hover:bg-[#052e1a] ">
               Log In
             </span>
           </div>
