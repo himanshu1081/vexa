@@ -10,8 +10,10 @@ import { SidebarContext } from "../layout";
 import SkeletonHistory from "../../../components/SkeletonHistory";
 import axios from "axios";
 import { chatHistoryContext } from "../layout";
+import { UserInfoContext } from "../layout";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from 'remark-gfm'
+import CrazyLoader from "../../../components/CrazyLoader";
 
 //icons
 import { FaArrowUpLong } from "react-icons/fa6";
@@ -70,7 +72,9 @@ export default function Page() {
         setMessages: React.Dispatch<React.SetStateAction<Message[]>>;
     };
 
-
+    const userInfo = useContext(UserInfoContext)
+    const userAvatar = userInfo?.userInfo?.user_metadata?.avatar_url;
+    const userName = userInfo?.userInfo?.identities[0]?.identity_data?.name
     const router = useRouter();
     const param = useSearchParams();
     const q = param.get('q')
@@ -87,6 +91,7 @@ export default function Page() {
     const hasInitialLoaded = useRef<boolean>(false);
     const [IsScrolledUp, setIsScrolledUp] = useState(false)
     const { chatHistory, setChatHistory } = useContext(chatHistoryContext)
+    const [searching, setSearching] = useState<boolean>(false)
 
     const SYSTEM_MESSAGE: Message = {
         role: "system",
@@ -102,8 +107,6 @@ export default function Page() {
 `,
         timestamp: date.toString()
     };
-
-
 
     const [messages, setMessages] = useState<Message[]>([
         SYSTEM_MESSAGE,
@@ -234,7 +237,6 @@ export default function Page() {
         el.style.height = el.scrollHeight + "px"; // grow
     };
 
-
     const saveMessage = async (conversation_id: string, role: "user" | "assistant" | "system"
         , content: string) => {
 
@@ -311,6 +313,8 @@ export default function Page() {
 
         handleUserMessage();
 
+        setSearching(true)
+
         handleAiReply();
 
 
@@ -345,7 +349,6 @@ export default function Page() {
                     }
                 ))
             });
-            console.log(res)
 
             //saving assistant message in database
             const { data } = await saveMessage(chatid!, "assistant", res.data.text);
@@ -354,6 +357,7 @@ export default function Page() {
                 content: res.data?.text,
                 timestamp: data?.timestamp
             }]);
+            setSearching(false);
             requestAnimationFrame(() => {
                 scrollDown()
             })
@@ -450,8 +454,13 @@ export default function Page() {
                                             </div>
 
                                         </div>}
-                                        <div className="p-2 border-t border-white/10">
-                                            Himanshu Chaudhary
+                                        <div className="p-2 border-t border-white/10 flex items-center justify-center gap-2">
+                                            <span className="">
+                                                <img src={userAvatar} alt="user-avatar" className="object-cover w-8 h-7 md:h-8 md:w-8 rounded-full" />
+                                            </span>
+                                            <span className="line-clamp-1">
+                                                {userName}
+                                            </span>
                                         </div>
                                     </div>
                                 </div>
@@ -537,6 +546,9 @@ export default function Page() {
                                                                     </pre>
                                                                 )
                                                             },
+                                                            p({ children }) {
+                                                                return <div className="my-2">{children}</div>;
+                                                            },
                                                             table({ node, inline, className, children, ...props }: any) {
                                                                 return (
                                                                     <table className="overflow-auto rounded-xl bg-[#181818]/50 text-sm w-full my-4">
@@ -561,14 +573,14 @@ export default function Page() {
                                                             },
                                                             tr({ node, inline, className, children, ...props }: any) {
                                                                 return (
-                                                                    <tr className="p-2 ">
+                                                                    <tr className="p-2">
                                                                         {children}
                                                                     </tr>
                                                                 )
                                                             },
                                                             hr({ node, ...props }) {
                                                                 return (
-                                                                    <hr className="my-6 border-gray-300" {...props} />
+                                                                    <hr className="my-6 border-gray-700" {...props} />
                                                                 )
                                                             },
                                                         }
@@ -583,6 +595,12 @@ export default function Page() {
                                 }
                             </div>
                         ))}
+                        {
+                            !searching &&
+                            <div className="p-2 ml-5">
+                                <CrazyLoader />
+                            </div>
+                        }
                     </div>
 
                     {/* INPUT BAR (STICKY & RESPONSIVE) */}

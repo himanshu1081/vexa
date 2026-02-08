@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "motion/react"
 import { SidebarContext } from "./layout";
 import { chatHistoryContext } from "./layout";
+import { UserInfoContext } from "./layout";
 import SkeletonHistory from "../../components/SkeletonHistory";
 
 //icons
@@ -60,6 +61,9 @@ export default function Page() {
     const inputTextRef = useRef<HTMLTextAreaElement | null>(null);
     const [userPrompt, setUserPrompt] = useState<string>("");
     const [conversation, setConversation] = useState<Conversation | null>(null);
+    const userInfo = useContext(UserInfoContext)
+    const userAvatar = userInfo?.userInfo?.user_metadata?.avatar_url;
+    const userName = userInfo?.userInfo?.identities[0]?.identity_data?.name
 
     // creating a conversation
     const createConversation = async () => {
@@ -142,13 +146,11 @@ export default function Page() {
 
     return (
         <>
-
             <div className={`flex justify-between items-center w-screen h-screen ${instrumentFont.className} `}>
                 {
                     sidebar &&
                     <div className="z-10 bg-black/50 w-full h-full absolute cursor-pointer lg:opacity-0 lg:pointer-events-none"
                         onClick={() => setSidebar(false)}>
-
                     </div>
                 }
                 <AnimatePresence>
@@ -210,8 +212,13 @@ export default function Page() {
                                             </div>
 
                                         </div>}
-                                        <div className="p-2 border-t border-white/10">
-                                            Himanshu Chaudhary
+                                        <div className="p-2 border-t border-white/10 flex items-center justify-center gap-2">
+                                            <span className="">
+                                                <img src={userAvatar} alt="user-avatar" className="object-cover w-8 h-7 md:h-8 md:w-8 rounded-full" />
+                                            </span>
+                                            <span className="line-clamp-1">
+                                                {userName}
+                                            </span>
                                         </div>
                                     </div>
                                 </div>
@@ -219,26 +226,35 @@ export default function Page() {
                         </motion.div>}
                 </AnimatePresence>
 
-                <div className="flex flex-col justify-center items-center w-full h-full">
-                    <div className="h-full w-full flex justify-between items-center flex-col p-1">
-                        <div className="h-fit w-full flex text-xs md:text-sm justify-between items-start p-2">
-                            <span className={`flex justify-center items-center gap-2 h-fit ${sidebar?"opacity-0":""}`}>
+                <div className={`flex h-full flex-col flex-1 relative ${sidebar ? "lg:max-w-3/4" : "max-w-6/6"} `}>
+                    <div className="w-full h-full flex justify-between items-center flex-col p-1">
+                        {/* Header */}
+                        <div className="flex w-full items-center justify-between p-3 text-sm border-b border-white/10">
+                            <div className="flex items-center gap-2">
                                 <span
-                                    className="cursor-pointer  rounded-full hover:bg-[#454545] p-1 "
-                                    onClick={() => setSidebar(!sidebar)}>
+                                    className="p-1 rounded-full hover:bg-[#454545] cursor-pointer"
+                                    onClick={() => setSidebar(!sidebar)}
+                                >
                                     <FiSidebar size={20} />
                                 </span>
-                            </span>
-                            <span className="w-fit h-full flex items-center justify-center">
+
                                 <span
-                                    className="cursor-pointer px-2 py-1 bg-red-500 hover:bg-red-600 rounded-lg font-medium"
-                                    onClick={logout}>
-                                    Logout
+                                    onClick={() => router.push("/chat")}
+                                    className="cursor-pointer bg-gray-200 hover:bg-gray-300 text-black px-3 py-1 rounded-lg"
+                                >
+                                    New Chat
                                 </span>
+                            </div>
+
+                            <span
+                                onClick={logout}
+                                className="cursor-pointer bg-red-500 hover:bg-red-600 px-3 py-1 rounded-lg"
+                            >
+                                Logout
                             </span>
                         </div>
-                        {/* Chat area */}
-                        <div className="h-full w-full flex items-center  justify-center">
+
+                        <div className="h-full w-full flex flex-1 items-center  justify-center">
                             <div className="flex flex-col w-full h-full justify-center items-center">
                                 <div className=" flex flex-col w-full h-full justify-center items-center">
                                     <motion.span
@@ -264,8 +280,13 @@ export default function Page() {
                                     </motion.div>
                                 </div>
                             </div>
+                            
+
+                            {/* Input area */}
+
+                            
                             <div
-                                className="bg-[#2c2c30] backdrop-blur-2xl shadow-2xl border-2 border-black/20 p-3 rounded-2xl flex w-11/12 sm:w-3/4 md:w-3/4 lg:w-2/4 h-fit lg:min-h-20 max-h-2/4 justify-between items-center gap-2 overflow-scroll hide-scrollbar absolute bottom-5">
+                                className="bg-[#2c2c30] backdrop-blur-2xl shadow-2xl border-2 border-black/20 p-3 rounded-2xl flex w-11/12 sm:w-3/4 md:w-3/4 lg:w-3/4 h-fit lg:min-h-20 max-h-2/4 justify-between items-center gap-2 overflow-scroll hide-scrollbar absolute bottom-5">
                                 <textarea
                                     ref={inputTextRef}
                                     rows={1}
@@ -278,8 +299,8 @@ export default function Page() {
                                 />
                                 <span
                                     onClick={!isSending && userPrompt.trim() ? redirectPage : undefined}
-                                    className={`rounded-lg  p-3 ${isSending || !userPrompt.trim()
-                                        ? "bg-[#00CC66] cursor-not-allowed"
+                                    className={`rounded-lg  p-3 ${isSending || (userPrompt.trim()==="")
+                                        ? "bg-[#45b37c] cursor-not-allowed"
                                         : "bg-[#00CC66] cursor-pointer"
                                         }`}
                                 >

@@ -6,13 +6,6 @@ import { supabase } from "../lib/supabase";
 import { useRouter } from "next/navigation";
 import { Inter, Instrument_Sans } from "next/font/google";
 
-//icons
-import { IoReorderThree } from "react-icons/io5";
-import { HiOutlinePencilSquare } from "react-icons/hi2";
-import { BsThreeDots } from "react-icons/bs";
-import { RiDeleteBin6Line } from "react-icons/ri";
-import HistoryList from "../../components/HistoryList";
-
 const inter = Inter({
     subsets: ["latin"],
     weight: ["400", "500", "600", "700", "900"],
@@ -36,10 +29,12 @@ type ChatHistoryContextType = {
 }
 
 
+
 export const SidebarContext = createContext<SidebarContextType | null>(null);
 
 export const chatHistoryContext = createContext<ChatHistoryContextType | null>(null);
 
+export const UserInfoContext = createContext<any>(null);
 
 export default function MainLayout({
     children,
@@ -48,17 +43,18 @@ export default function MainLayout({
 }) {
 
     const router = useRouter();
-
-    const [options, setOptions] = useState<boolean>(false)
     const [sidebar, setSidebar] = useState<boolean>(false)
     const [chatHistory, setChatHistory] = useState<ChatHistory[]>([])
     const [windowSize, setWindowSize] = useState<number>(0)
+    const [userInfo, setUserInfo] = useState<any>();
 
     const session = async () => {
         const res = await supabase.auth.getSession()
-        if(res?.data?.session==null){
+        if (res?.data?.session == null) {
             router.push("/auth/login")
         }
+        setUserInfo(res?.data?.session?.user)
+        console.log(res?.data?.session?.user)
         return res?.data?.session?.user?.id
     }
 
@@ -77,7 +73,6 @@ export default function MainLayout({
         }
     }
 
-
     //to handle window resize
     useEffect(() => {
 
@@ -93,6 +88,7 @@ export default function MainLayout({
     useEffect(() => {
         const fetchData = async () => {
             const userId = await session();
+            console.log(userId)
             getConversation(userId);
         }
         fetchData()
@@ -100,12 +96,13 @@ export default function MainLayout({
 
     return (
         <>
-            <SidebarContext.Provider value={{ sidebar, setSidebar }}>
-                <chatHistoryContext.Provider value={{ chatHistory, setChatHistory }}>
+            <UserInfoContext value={{ userInfo }}>
+                <SidebarContext.Provider value={{ sidebar, setSidebar }}>
+                    <chatHistoryContext.Provider value={{ chatHistory, setChatHistory }}>
 
-                    <div className="gradient-background absolute z-1">
+                        <div className="gradient-background absolute z-1">
 
-                        {/* <div className={`${sidebar ? "translate-x-0 w-3/4 sm:w-2/6 lg:w-2/12 " : " -translate-x-100 w-0 "} ${windowSize < 768 ? "" : ""} absolute z-11 left-0 flex justify-center items-center h-screen bg-[#181818]
+                            {/* <div className={`${sidebar ? "translate-x-0 w-3/4 sm:w-2/6 lg:w-2/12 " : " -translate-x-100 w-0 "} ${windowSize < 768 ? "" : ""} absolute z-11 left-0 flex justify-center items-center h-screen bg-[#181818]
  py-5 transition-all duration-300 ease-in-out ${inter.className} text-sm border-r border-gray-600/30`}>
                             <div className="flex flex-col justify-between h-full items-start w-full px-2">
                                 <div className="flex flex-col w-full px-2">
@@ -160,19 +157,21 @@ export default function MainLayout({
                                 </div>
                             </div>
                         </div> */}
-                        {/* {
+                            {/* {
                             sidebar &&
                             <div className="z-10 bg-black/50 w-full h-full absolute cursor-pointer"
                                 onClick={() => setSidebar(false)}>
 
                             </div>
                         } */}
-                        <main className="relative z-2 min-h-screen">
-                            {children}
-                        </main>
-                    </div>
-                </chatHistoryContext.Provider>
-            </SidebarContext.Provider>
+                            <main className="relative z-2 min-h-screen">
+                                {children}
+                            </main>
+                        </div>
+                    </chatHistoryContext.Provider>
+                </SidebarContext.Provider>
+            </UserInfoContext>
+
         </>
     );
 }
