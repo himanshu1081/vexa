@@ -596,7 +596,7 @@ export default function Page() {
                             </div>
                         ))}
                         {
-                            !searching &&
+                            searching &&
                             <div className="p-2 ml-5">
                                 <CrazyLoader />
                             </div>
