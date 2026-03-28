@@ -146,7 +146,12 @@ export default function Page() {
 
     return (
         <>
-            <div className={`flex justify-between items-center w-screen h-screen ${instrumentFont.className} `}>
+            <div 
+            tabIndex={0}
+            onKeyDown={(e) => {
+                inputTextRef.current.focus()
+            }}
+                className={`flex justify-between items-center w-screen h-screen ${instrumentFont.className} `}>
                 {
                     sidebar &&
                     <div className="z-10 bg-black/50 w-full h-full absolute cursor-pointer lg:opacity-0 lg:pointer-events-none"
@@ -280,11 +285,11 @@ export default function Page() {
                                     </motion.div>
                                 </div>
                             </div>
-                            
+
 
                             {/* Input area */}
 
-                            
+
                             <div
                                 className="bg-[#2c2c30] backdrop-blur-2xl shadow-2xl border-2 border-black/20 p-3 rounded-2xl flex w-11/12 sm:w-3/4 md:w-3/4 lg:w-3/4 h-fit lg:min-h-20 max-h-2/4 justify-between items-center gap-2 overflow-scroll hide-scrollbar absolute bottom-5">
                                 <textarea
@@ -299,7 +304,7 @@ export default function Page() {
                                 />
                                 <span
                                     onClick={!isSending && userPrompt.trim() ? redirectPage : undefined}
-                                    className={`rounded-lg  p-3 ${isSending || (userPrompt.trim()==="")
+                                    className={`rounded-lg  p-3 ${isSending || (userPrompt.trim() === "")
                                         ? "bg-[#45b37c] cursor-not-allowed"
                                         : "bg-[#00CC66] cursor-pointer"
                                         }`}

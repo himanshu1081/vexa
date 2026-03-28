@@ -384,8 +384,11 @@ export default function Page() {
         <>
             {/* ROOT LAYOUT */}
             <div
+                tabIndex={0}
                 className={`relative flex w-screen h-screen  ${instrumentFont.className}`}
-            >
+                onKeyDown={(e) => {
+                    inputTextRef.current.focus()
+                }}>
                 {/* BACKDROP FOR SIDEBAR (MOBILE ONLY) */}
                 {sidebar && (
                     <div
