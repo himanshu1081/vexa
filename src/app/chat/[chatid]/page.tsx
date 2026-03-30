@@ -2,7 +2,7 @@
 import { Inter, Instrument_Sans } from "next/font/google";
 import { Manrope } from "next/font/google";
 import { useState, useRef, ChangeEvent, useContext, useEffect, Children } from "react";
-import { supabase } from "../../lib/supabase";
+import { supabase } from "../../../lib/supabase";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "motion/react"
 import { useParams, useSearchParams } from "next/navigation";

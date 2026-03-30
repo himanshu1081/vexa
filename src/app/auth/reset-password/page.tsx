@@ -2,7 +2,7 @@
 import { Inter } from "next/font/google";
 import { Instrument_Sans } from "next/font/google";
 import { useState } from "react";
-import { supabase } from "../../lib/supabase";
+import { supabase } from "../../../lib/supabase";
 import { useRouter } from "next/navigation";
 
 //icons

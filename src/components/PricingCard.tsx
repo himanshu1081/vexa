@@ -59,7 +59,7 @@ const PricingCard: React.FC<PricingPlan> = ({
       <div>
         <span className={`text-2xl ${inter.className}`}>{name}</span>
         <div className="text-4xl font-semibold mt-1">
-          ${price.toFixed(2)}
+          ₹{price.toFixed(2)}
           <span className="text-base font-normal text-white/60">
             /{priceUnit}
           </span>
@@ -84,19 +84,34 @@ const PricingCard: React.FC<PricingPlan> = ({
 
       {/* CTA */}
       <div className="w-full flex justify-center">
-        <Link
-          href={`pricing/choose/${id}`}
-          className="
-            px-4 py-2
-            bg-white text-black
-            rounded-2xl
-            text-sm md:text-base
-            hover:bg-white/80
-            transition
-          "
-        >
-          Choose Plan
-        </Link>
+        {price === 0 ?
+          <span className="
+        px-4 py-2
+        bg-white text-black
+        rounded-2xl
+        text-sm md:text-base
+        hover:bg-white/80
+        transition
+        "
+          >
+            {name == 'Free' ? "Current Plan" : "Upgrade"}
+
+          </span>
+          :
+          <Link
+            href={`pricing/choose/${id}`}
+            className="
+        px-4 py-2
+        bg-white text-black
+        rounded-2xl
+        text-sm md:text-base
+        hover:bg-white/80
+        transition
+        "
+          >
+            {name == 'Free' ? "Current Plan" : "Upgrade"}
+          </Link>
+        }
       </div>
     </motion.div>
   );

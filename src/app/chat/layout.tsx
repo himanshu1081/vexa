@@ -2,7 +2,7 @@
 import "../../styles/background.css";
 import SkeletonHistory from "../../components/SkeletonHistory";
 import { useState, useEffect, createContext } from "react";
-import { supabase } from "../lib/supabase";
+import { supabase } from "../../lib/supabase";
 import { useRouter } from "next/navigation";
 import { Inter, Instrument_Sans } from "next/font/google";
 

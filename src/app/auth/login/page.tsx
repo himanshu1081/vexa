@@ -4,8 +4,8 @@ import { Instrument_Sans } from "next/font/google";
 import { motion } from "motion/react"
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { redirect, useRouter } from "next/navigation";
-import { supabase } from "../../lib/supabase";
+import { useRouter } from "next/navigation";
+import { supabase } from "../../../lib/supabase";
 
 
 

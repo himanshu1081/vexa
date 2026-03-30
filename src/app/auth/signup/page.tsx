@@ -1,10 +1,11 @@
 "use client";
+import { API_URL } from "../../../lib/config";
 import { Inter } from "next/font/google";
 import { Instrument_Sans } from "next/font/google";
 import { motion } from "motion/react"
 import Link from "next/link";
 import { useState, useEffect, use } from "react";
-import { supabase } from "../../lib/supabase"
+import { supabase } from "../../../lib/supabase"
 
 
 
@@ -102,7 +103,7 @@ export default function Page() {
     await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: "http://localhost:3000/auth/callback",
+        redirectTo: `${API_URL}/auth/callback`,
       },
     });
   }
@@ -111,7 +112,7 @@ export default function Page() {
     await supabase.auth.signInWithOAuth({
       provider: "github",
       options: {
-        redirectTo: "http://localhost:3000/auth/callback",
+        redirectTo: `${API_URL}/auth/callback`,
       },
     });
   }

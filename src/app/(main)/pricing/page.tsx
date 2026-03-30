@@ -40,7 +40,7 @@ export default function Page() {
     {
       id: "standard",
       name: "Standard",
-      price: 9.99,
+      price: 50,
       priceUnit: "month",
       tagline: "For freelancers and small teams needing flexibility.",
       features: [
@@ -54,7 +54,7 @@ export default function Page() {
     {
       id: "pro",
       name: "Pro",
-      price: 19.99,
+      price: 200,
       priceUnit: "month",
       tagline: "For studios, agencies, and professional creators.",
       features: [

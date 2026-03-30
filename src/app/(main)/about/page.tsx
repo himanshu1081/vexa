@@ -1,15 +1,8 @@
 "use client";
-import { motion } from "motion/react";
 import { Inter } from "next/font/google";
 import { Instrument_Sans } from "next/font/google";
-import Link from "next/link";
 
-const inter = Inter({ subsets: ["latin"], weight: "700" });
-const instrumentFont = Instrument_Sans({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  variable: "--font-instrument",
-});
+
 
 export default function Page() {
   return (

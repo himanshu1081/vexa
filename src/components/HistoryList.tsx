@@ -7,7 +7,7 @@ import { motion } from "framer-motion"
 import { BsThreeDots } from "react-icons/bs";
 import { MdOutlineDeleteForever } from "react-icons/md";
 import { GoPencil } from "react-icons/go";
-import { supabase } from "../app/lib/supabase";
+import { supabase } from "../lib/supabase";
 
 const HistoryList = ({ clickedId, t }) => {
     const router = useRouter();
