@@ -11,12 +11,11 @@ export async function POST(req) {
   try {
     let { amount } = await req.json();
     if (amount < 0) {
-      amount = 0
+      amount = 1
     }
-    console.log(amount)
 
     const options = {
-      amount: 1* 100,
+      amount: amount* 100,
       currency: "INR",
       receipt: "rcpt_" + Date.now()
     };
