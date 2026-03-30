@@ -99,9 +99,9 @@ export default function Page() {
         })
         const payment = await verifyPayment.json()
         if (payment.success) {
-          router.push(`${API_URL}/payment?status=success`)
+          router.push("/payment?status=success");
         } else {
-          router.push(`${API_URL}/payment?status=fail`)
+          router.push("/payment?status=fail");
         }
       }
     }
