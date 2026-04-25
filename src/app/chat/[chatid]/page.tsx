@@ -316,8 +316,6 @@ export default function Page() {
         setSearching(true)
 
         handleAiReply();
-
-
     };
 
     const handleUserMessage = async () => {
@@ -341,14 +339,18 @@ export default function Page() {
 
     const handleAiReply = async () => {
         try {
+            const trimmed = messages.slice(-6);
+
             const res = await axios.post("/api/chat", {
-                messages: [SYSTEM_MESSAGE, ...messages, { content: userPrompt, role: "user" }].map((m) => (
-                    {
+                messages: [
+                    { role: "system", content: SYSTEM_MESSAGE.content },
+                    ...trimmed.map(m => ({
                         role: m.role,
                         content: m.content
-                    }
-                ))
+                    }))
+                ]
             });
+
 
             //saving assistant message in database
             const { data } = await saveMessage(chatid!, "assistant", res.data.text);
