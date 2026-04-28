@@ -22,7 +22,7 @@ import { FaArrowDown } from "react-icons/fa6";
 import { HiOutlinePencilSquare } from "react-icons/hi2";
 import HistoryList from "../../../components/HistoryList";
 import { RxCross2 } from "react-icons/rx";
-
+import { MdErrorOutline } from "react-icons/md";
 
 const inter = Inter({
     subsets: ["latin"],
@@ -92,7 +92,7 @@ export default function Page() {
     const [IsScrolledUp, setIsScrolledUp] = useState(false)
     const { chatHistory, setChatHistory } = useContext(chatHistoryContext)
     const [searching, setSearching] = useState<boolean>(false)
-
+    const [llmError, setLlmError] = useState<boolean>(false)
     const SYSTEM_MESSAGE: Message = {
         role: "system",
         content: `You are a helpful, friendly AI assistant.
@@ -308,23 +308,25 @@ export default function Page() {
     const getReply = () => {
         if (isSending) return;
         if (!userPrompt.trim()) return;
-
+        
         setIsSending(true);
+        handleUserMessage()
 
-        handleUserMessage();
+        handleAiReply();
+    };
 
+    
+    const handleRetry = () => {
+        if (isSending) return;
+        setLlmError(false)
         setSearching(true)
-
+        setIsSending(true);
         handleAiReply();
     };
 
     const handleUserMessage = async () => {
         const date = Date.now()
-        console.log(date.toLocaleString())
-        console.log(typeof (date))
         const { data } = await saveMessage(chatid, "user", userPrompt);
-        console.log(data.timestamp)
-        console.log(typeof (data.timestamp))
 
         const updatedMessages: Message = { role: "user", content: userPrompt, timestamp: data.timestamp }
 
@@ -365,6 +367,9 @@ export default function Page() {
             })
         } catch (err) {
             console.error(err);
+            setSearching(false)
+            setLlmError(true)
+
         } finally {
             setIsSending(false);
         }
@@ -604,6 +609,26 @@ export default function Page() {
                             searching &&
                             <div className="p-2 ml-5">
                                 <CrazyLoader />
+                            </div>
+                        }
+                        {
+                            llmError &&
+                            <div className="flex gap-2 flex-col ">
+                                <div className="p-2 ml-5 text-red-500 flex gap-2 items-center justify-start bg-red-600/30 w-fit rounded-md border border-red-500/50 backdrop-blur-lg ">
+                                    <span>
+                                        <MdErrorOutline />
+                                    </span>
+                                    <span>
+                                        There was an error while streaming the message.
+                                    </span>
+                                </div>
+                                <div className="flex flex-col text-sm items-start justify-start gap-2">
+                                    <button
+                                        onClick={handleRetry}
+                                        className="bg-white p-2 px-4 rounded-2xl text-black border border-black/50 cursor-pointer hover:bg-white/80">
+                                        Retry
+                                    </button>
+                                </div>
                             </div>
                         }
                     </div>
