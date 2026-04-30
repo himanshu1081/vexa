@@ -308,14 +308,14 @@ export default function Page() {
     const getReply = () => {
         if (isSending) return;
         if (!userPrompt.trim()) return;
-        
+
         setIsSending(true);
         handleUserMessage()
 
         handleAiReply();
     };
 
-    
+
     const handleRetry = () => {
         if (isSending) return;
         setLlmError(false)
@@ -331,7 +331,6 @@ export default function Page() {
         const updatedMessages: Message = { role: "user", content: userPrompt, timestamp: data.timestamp }
 
         setMessages(prev => [...prev, updatedMessages]);
-        setUserPrompt("");
 
 
         requestAnimationFrame(() => {
@@ -349,9 +348,13 @@ export default function Page() {
                     ...trimmed.map(m => ({
                         role: m.role,
                         content: m.content
-                    }))
+                    })),
+
+                    { role: "user", content: userPrompt },
                 ]
-            });
+            }
+            );
+            setUserPrompt("");
 
 
             //saving assistant message in database
